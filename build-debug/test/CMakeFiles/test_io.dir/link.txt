@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/test_io.dir/test_io.cpp.o -o test_io  -Wl,-rpath,/home/wjc/workspace/file_io/build-debug ../libqcu_io.so 
