@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <stdexcept>
 #include <complex>
-
+#include "lattice_desc.h"
 
 struct LatticeIOHandler {
     bool file_opened = false;
@@ -39,5 +39,6 @@ void write_to_file (
         std::complex<_FloatType> *device_src_data,       // 数据指针
         std::complex<_FloatType> *device_dst_data,       // 数据指针
         std::complex<_FloatType> *device_gauge_data,     // 数据指针
-        const char *file_path                       // 文件路径
+        const char *file_path,                        // 文件路径
+        LatticeConfig& lattice_config
     );

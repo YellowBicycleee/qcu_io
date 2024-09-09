@@ -6,5 +6,5 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(QCU_IO_TESTS LANGUAGES C CXX CUDA) # project name = ${PROJECT_NAME}
 
-add_executable       (test_io ${PROJECT_SOURCE_DIR}/test_io.cpp)
+add_executable       (test_io ${PROJECT_SOURCE_DIR}/test_io.cu)
 target_link_libraries(test_io qcu_io)
