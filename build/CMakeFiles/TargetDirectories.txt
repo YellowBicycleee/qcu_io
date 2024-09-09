@@ -1,6 +1,0 @@
-/home/wjc/workspace/file_io/build/CMakeFiles/qcu_io.dir
-/home/wjc/workspace/file_io/build/CMakeFiles/edit_cache.dir
-/home/wjc/workspace/file_io/build/CMakeFiles/rebuild_cache.dir
-/home/wjc/workspace/file_io/build/test/CMakeFiles/test_io.dir
-/home/wjc/workspace/file_io/build/test/CMakeFiles/edit_cache.dir
-/home/wjc/workspace/file_io/build/test/CMakeFiles/rebuild_cache.dir

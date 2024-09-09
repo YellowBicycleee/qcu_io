@@ -1,4 +1,0 @@
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" -S /home/wjc/workspace/file_io -B /home/wjc/workspace/file_io/build-debug
--- Configuring done
--- Generating done
--- Build files have been written to: /home/wjc/workspace/file_io/build-debug

@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -O3 -DNDEBUG -shared -Wl,-soname,libqcu_io.so -o libqcu_io.so CMakeFiles/qcu_io.dir/src/lqcd_read_write.cu.o CMakeFiles/qcu_io.dir/test/test_io.cpp.o   -L/usr/local/cuda/targets/x86_64-linux/lib/stubs  -L/usr/local/cuda/targets/x86_64-linux/lib  -lcudadevrt -lcudart_static -lrt -lpthread -ldl 
