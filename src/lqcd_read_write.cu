@@ -26,9 +26,10 @@ void read_from_file (
     LatticeIOHandler file_handler(file_path);
     // 读取文件头
     LatticeConfig lattice_config;
-    FILE *file = fopen(file_path, "r");
+    FILE *file = fopen(file_path, "rb");
     if (file == nullptr) {
-        throw std::runtime_error(std::string("Failed to open file") + file_path);
+
+        throw std::runtime_error(std::string("Failed to open file in function ") + __FUNCTION__ + file_path);
     }
     else {
         printf("FILE %s opened correctly\n", file_path);
@@ -97,9 +98,9 @@ void write_to_file (
     LatticeIOHandler file_handler(file_path);
     // 读取文件头
     // LatticeConfig lattice_config;
-    FILE *file = fopen(file_path, "w");
+    FILE *file = fopen(file_path, "wb");
     if (file == nullptr) {
-        throw std::runtime_error(std::string("Failed to open file") + file_path);
+        throw std::runtime_error(std::string("Failed to open file in function ") + __FUNCTION__ + file_path);
     }
     else {
         printf("FILE %s opened correctly\n", file_path);
@@ -115,11 +116,11 @@ void write_to_file (
     auto appendSize = sizeof(LatticeConfig) + 
             (2 * mrhs_colorspinor_length + gauge_length) * sizeof (complex<_FloatType>);
 
-    ftruncate(file_handler.fd, sb.st_size + appendSize);
+    ftruncate(file_handler.fd, appendSize);
     fsync(file_handler.fd);
 
-    printf("======fd = %d, sb.st_size = %ld, sb.st_size + appendSize = %ld\n", 
-                    file_handler.fd, sb.st_size, sb.st_size + appendSize);
+    printf("======fd = %d, sb.st_size = %ld, appendSize = %ld, sb.st_size + appendSize = %ld\n", 
+                    file_handler.fd, sb.st_size, appendSize, sb.st_size + appendSize);
     
     void* origin_data = mmap(nullptr, sb.st_size + appendSize, PROT_WRITE | PROT_READ, 
                             MAP_SHARED, file_handler.fd, 0);

@@ -6,20 +6,10 @@
 #include "lqcd_read_write.h"
 #include <complex>
 #include <vector>
-// #include <cuda_runtime_api.h>
 #include "check_cuda.h"
 
 using namespace std;
 
-// __global__ void print (complex<double>* vec, int length) {
-//     if (threadIdx.x == 0 && blockIdx.x == 0) {
-//         printf("PRINT DEBUG: \n");
-//         for (int i = 0; i < length; ++i) {
-//             printf("i = %d, real = %e, imag = %e\n", i, vec[i], imag(vec[i]));
-//         }
-//         printf("\n");
-//     }
-// }
 
 template <typename _Float>
 void init_complex_vector(complex<_Float>* vec, int length) {
@@ -88,8 +78,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < gauge_len; ++i) {
         cout << h_gauge_ptr[i] << endl;
     }
-
-
 
     // DEBUG 
     cout << h_dst_ptr[0] << endl;

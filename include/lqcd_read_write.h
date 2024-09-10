@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <complex>
 #include "lattice_desc.h"
-
+#include <string>
 struct LatticeIOHandler {
     bool file_opened = false;
     int fd = -1;
@@ -13,7 +13,7 @@ struct LatticeIOHandler {
     LatticeIOHandler(const char *file_path) : file_path(file_path) {
         fd = open(file_path, O_RDWR); // O_RDWR: Read and write
         if (fd == -1) {
-            throw std::runtime_error("Failed to open file");
+            throw std::runtime_error(std::string("Failed to open file ") + file_path);
         }
         file_opened = true;
     }
