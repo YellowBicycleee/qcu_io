@@ -7,8 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 project(QCU_IO LANGUAGES C CXX CUDA)
 add_library(qcu_io
         SHARED
+        src/lattice_desc.cpp
+        src/lattice_parse_terminal_param.cpp
         src/lqcd_read_write.cu
-        # test/test_io.cpp
 )
 
 target_include_directories(qcu_io
