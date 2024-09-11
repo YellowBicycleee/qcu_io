@@ -8,12 +8,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
+#include <cstring>
+#include <cuda_runtime_api.h>
 using std::complex;
 using std::cout;
 using std::endl;
-
-
-
 
 template <typename _FloatType>
 static void write_to_file_memcpy_GPU (
