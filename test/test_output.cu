@@ -67,9 +67,6 @@ int main(int argc, char* argv[]) {
 
   write_to_file<double>(d_src_ptr, d_dst_ptr, d_gauge_ptr, file_path, lattice_config);
 
-  cout << "mrhs_colorspinor_len = " << mrhs_colorspinor_len << endl;
-  cout << "gauge_len = " << gauge_len << endl;
-  cout << "sizeof config = " << sizeof(LatticeConfig) << endl;
   CHECK_CUDA(cudaFree(d_src_ptr));
   CHECK_CUDA(cudaFree(d_dst_ptr));
   CHECK_CUDA(cudaFree(d_gauge_ptr));
@@ -100,7 +97,11 @@ int main(int argc, char* argv[]) {
     }
   }
   fclose(debugfile);
-
+  cout << "mrhs_colorspinor_len = " << mrhs_colorspinor_len << endl;
+  cout << "gauge_len = " << gauge_len << endl;
+  std::cout << "sizeof(Config) = " << sizeof(LatticeConfig) << std::endl;
+  lattice_config.m_mpi_desc.detail();
+  lattice_config.m_lattice_desc.detail();
   delete[] h_src_ptr;
   delete[] h_dst_ptr;
   delete[] h_gauge_ptr;
