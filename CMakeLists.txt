@@ -13,8 +13,9 @@ include(cmake/cuda.cmake)
 # see https://github.com/TheLartians/CPM.cmake for more info
 option(USE_CPM "Use CPM for dependency management" OFF)
 
-aux_source_directory(src IO_SRC)
-add_library(qcu_io SHARED ${IO_SRC})
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/io IO_SRC)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/latt_desc LATT_DESC)
+add_library(qcu_io SHARED ${IO_SRC} ${LATT_DESC})
 
 target_link_directories(qcu_io PUBLIC ${CMAKE_CUDA_COMPILER_LIBRARY_ROOT}/lib64)
 target_link_libraries(qcu_io PUBLIC cudart)
