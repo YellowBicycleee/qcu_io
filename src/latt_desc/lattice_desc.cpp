@@ -1,7 +1,8 @@
 #include "lattice_desc.h"
 #include <cstdio>
 
-bool LatticeDescription::operator== (const LatticeDescription& rhs) {
+bool LatticeDescription::operator== (const LatticeDescription& rhs) 
+{
     bool res = true;
     #pragma unroll
     for (int i = 0; i < MAX_DIM; ++i) {
@@ -13,13 +14,15 @@ bool LatticeDescription::operator== (const LatticeDescription& rhs) {
     return res;
 }
 
-void LatticeDescription::detail () {
-    fprintf(stdout, "Lattice information, total latt_desc = \n");
-    fprintf(stdout, "Lx = %d, Ly = %d, Lz = %d, Lt = %d\n", 
+void LatticeDescription::detail () 
+{
+    fprintf(stdout, "Lattice information, latt_desc = \n");
+    fprintf(stdout, "[Lx, Ly, Lz, Lt] = [%d, %d, %d, %d]\n", 
                     data[X_DIM], data[Y_DIM], data[Z_DIM], data[T_DIM]);
 }
 
-bool MpiDescription::operator== (const MpiDescription& rhs) {
+bool LatticeCoordinate::operator== (const LatticeCoordinate& rhs) 
+{
     bool res = true;
     #pragma unroll
     for (int i = 0; i < MAX_DIM; ++i) {
@@ -31,8 +34,45 @@ bool MpiDescription::operator== (const MpiDescription& rhs) {
     return res;
 }
 
-void MpiDescription::detail () {
-    fprintf(stdout, "Mpi information, total latt_desc = \n");
-    fprintf(stdout, "Nx = %d, Ny = %d, Nz = %d, Nt = %d\n", 
-                    data[X_DIM], data[Y_DIM], data[Z_DIM], data[T_DIM]);
+void LatticeCoordinate::detail () {
+    fprintf(stdout, "Lattice information, local coordinate = \n");
+    fprintf(stdout, "[x, y, z, t] = [%d, %d, %d, %d]\n", data[X_DIM], data[Y_DIM], data[Z_DIM], data[T_DIM]);
+}
+
+LatticeCoordinate LatticeCoordinate::globalLattCoord_4D
+    (
+        const MPI_Desc& mpi_desc, 
+        const MPI_Coordinate& mpi_coord
+    ) 
+{
+    LatticeCoordinate latt_coord;
+    #pragma unroll
+    for (int i = 0; i < 4; ++i) {
+        latt_coord.data[i] = mpi_desc.data[i] * mpi_coord.data[i] + data[i];
+    }
+    return latt_coord;
+}
+
+int32_t LatticeCoordinate::getIdx1D (const LatticeDescription& latt_desc) 
+{
+    int32_t idx = 0;
+    idx += data[X_DIM];
+    idx += data[Y_DIM] * latt_desc.data[X_DIM];
+    idx += data[Z_DIM] * latt_desc.data[X_DIM] * latt_desc.data[Y_DIM];
+    idx += data[T_DIM] * latt_desc.data[X_DIM] * latt_desc.data[Y_DIM] * latt_desc.data[Z_DIM];
+    return idx;
+}
+
+LatticeCoordinate LatticeCoordinate::getIdx4D (const int32_t idx, const LatticeDescription& latt_desc) 
+{
+    LatticeCoordinate latt_coord;
+    int32_t Lx = latt_desc.data[X_DIM];
+    int32_t Ly = latt_desc.data[Y_DIM];
+    int32_t Lz = latt_desc.data[Z_DIM];
+    
+    latt_coord.data[X_DIM] = idx % Lx;
+    latt_coord.data[Y_DIM] = (idx / Lx) % Ly;
+    latt_coord.data[Z_DIM] = (idx / (Lx * Ly)) % Lz;
+    latt_coord.data[T_DIM] = idx / (Lx * Ly * Lz);
+    return latt_coord;
 }
