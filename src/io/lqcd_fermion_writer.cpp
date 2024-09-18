@@ -9,7 +9,8 @@ template <typename _FloatType>
 void FermionWriter<_FloatType>::write_fermion_kernel 
     (std::complex<_FloatType>* disk_fermion, std::complex<_FloatType>* memory_fermion)
 {
-
+    auto fermion_length = header_.SingleColorSpinorLength();
+    memcpy(disk_fermion, memory_fermion, fermion_length * sizeof(std::complex<_FloatType>));
 }
 
 template <typename _FloatType>
@@ -27,12 +28,15 @@ FermionWriter<_FloatType>::FermionWriter
     auto fermion_length = header_.SingleColorSpinorLength();
 
     // 打开文件, 写文件头预先留出文件长度
-    file_handler_ = LatticeIOHandler(file_path, LatticeIOHandler::QCU_READ_WRITE_CREATE_MODE);
+    LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_WRITE_CREATE_MODE);
+    file_handler_ = file_handler;
     file_size_ = sizeof(QcuHeader) + (fermion_num * fermion_length) * sizeof (std::complex<_FloatType>);
-
+    
+    ftruncate(file_handler_.fd, file_size_);
+    fsync(file_handler_.fd);
     disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_WRITE | PROT_READ, MAP_SHARED, file_handler_.fd, 0);
     if (disk_mapped_ptr_ == MAP_FAILED || disk_mapped_ptr_ == nullptr) {
-        throw std::runtime_error("MMAP failed\n");
+        throw std::runtime_error("FermionWriter MMAP failed\n");
     }
 
     // 写文件头
@@ -63,3 +67,6 @@ void FermionWriter<_FloatType>::write_fermion (std::complex<_FloatType>* memory_
     write_fermion_kernel(disk_fermion, memory_fermion);
     fermion_pos_++;
 }
+
+template class FermionWriter<double>;
+template class FermionWriter<float>;

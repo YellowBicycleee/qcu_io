@@ -1,7 +1,7 @@
 #include "lattice_desc.h"
 #include <cstdio>
 
-bool LatticeDescription::operator== (const LatticeDescription& rhs) 
+bool Latt_Desc::operator== (const Latt_Desc& rhs) 
 {
     bool res = true;
     #pragma unroll
@@ -14,7 +14,7 @@ bool LatticeDescription::operator== (const LatticeDescription& rhs)
     return res;
 }
 
-void LatticeDescription::detail () 
+void Latt_Desc::detail () 
 {
     fprintf(stdout, "Lattice information, latt_desc = \n");
     fprintf(stdout, "[Lx, Ly, Lz, Lt] = [%d, %d, %d, %d]\n", 
@@ -53,7 +53,7 @@ LatticeCoordinate LatticeCoordinate::globalLattCoord_4D
     return latt_coord;
 }
 
-int32_t LatticeCoordinate::getIdx1D (const LatticeDescription& latt_desc) 
+int32_t LatticeCoordinate::getIdx1D (const Latt_Desc& latt_desc) 
 {
     int32_t idx = 0;
     idx += data[X_DIM];
@@ -63,7 +63,7 @@ int32_t LatticeCoordinate::getIdx1D (const LatticeDescription& latt_desc)
     return idx;
 }
 
-LatticeCoordinate LatticeCoordinate::getIdx4D (const int32_t idx, const LatticeDescription& latt_desc) 
+LatticeCoordinate LatticeCoordinate::getIdx4D (const int32_t idx, const Latt_Desc& latt_desc) 
 {
     LatticeCoordinate latt_coord;
     int32_t Lx = latt_desc.data[X_DIM];

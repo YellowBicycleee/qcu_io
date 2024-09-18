@@ -35,5 +35,5 @@ bool MPI_Coordinate::operator== (const MPI_Coordinate& rhs) {
 void MPI_Coordinate::detail () {
     fprintf(stdout, "Mpi information, coordinate = \n");
     fprintf(stdout, "[x, y, z, t] = [%d, %d, %d, %d]\n", 
-                    data[X_DIM], data[Y_DIM], data[Z_DIM], data[T_DIM]);
+                data[X_DIM], data[Y_DIM], data[Z_DIM], data[T_DIM]);
 }
