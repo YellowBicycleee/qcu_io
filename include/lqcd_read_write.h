@@ -52,7 +52,7 @@ struct QcuHeader
     StoragePrecision m_storage_precision = StoragePrecision::PRECISION_DOUBLE; // 默认double
     MrhsShuffled     m_mrhs_shuffled     = MrhsShuffled::MRHS_SHUFFLED_NO;
     StorageType      m_storage_type      = StorageType::TYPE_UNKNOWN;
-    LatticeDescription m_lattice_desc;
+    Latt_Desc        m_lattice_desc;
 
     int32_t m_Nc;
     union {
