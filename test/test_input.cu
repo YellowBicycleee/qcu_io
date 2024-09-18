@@ -8,6 +8,7 @@
 #include "check_cuda.h"
 #include "lattice_desc.h"
 #include "lqcd_read_write.h"
+#include "qcu_parse_terminal.h"
 
 using namespace std;
 
@@ -16,7 +17,7 @@ int main(int argc, char* argv[]) {
   int Nd = 4;
 
   string file_path = "test_io.bin";
-  LatticeConfig lattice_config = get_lattice_config(argc, argv, file_path);
+  QcuHeader lattice_config = get_lattice_config(argc, argv, file_path);
   lattice_config.m_Ns = Ns;
   lattice_config.m_Nd = Nd;
 
