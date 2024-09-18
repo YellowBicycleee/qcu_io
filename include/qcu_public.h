@@ -2,6 +2,8 @@
 
 #include <cstdint>
 constexpr int MAGIC_BYTE_SIZE = 4;
+constexpr int Nd = 4; // 4维
+constexpr int Ns = 4; // nSpinor = 4
 
 // 1 Byte
 enum class DataFormat : uint8_t {
@@ -33,5 +35,4 @@ enum LatticeDimension : int32_t {
     Y_DIM,
     Z_DIM,
     T_DIM,
-    Nd
 };
