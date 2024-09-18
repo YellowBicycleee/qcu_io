@@ -1,4 +1,4 @@
-#include "lattice_desc.h"
+#include "qcu_parse_terminal.h"
 #include <cstdio>
 #include <getopt.h>
 #include <vector>
@@ -24,8 +24,8 @@ static std::vector<int32_t> split_integers(const std::string &s, char delim) {
     return elems;
 }
 
-LatticeConfig get_lattice_config(int argc, char *argv[], std::string& file) {
-    LatticeConfig lattice_config;
+QcuHeader get_lattice_config(int argc, char *argv[], std::string& file, MPI_Desc& mpi_desc) {
+    QcuHeader lattice_config;
 
     bool lattice_setted = false;
     bool mpi_setted = false;
@@ -65,10 +65,10 @@ LatticeConfig get_lattice_config(int argc, char *argv[], std::string& file) {
                     exit(EXIT_FAILURE);
                 }
 
-                lattice_config.m_mpi_desc.data[X_DIM] = mpiDesc[X_DIM];
-                lattice_config.m_mpi_desc.data[Y_DIM] = mpiDesc[Y_DIM];
-                lattice_config.m_mpi_desc.data[Z_DIM] = mpiDesc[Z_DIM];
-                lattice_config.m_mpi_desc.data[T_DIM] = mpiDesc[T_DIM];
+                mpi_desc.data[X_DIM] = mpiDesc[X_DIM];
+                mpi_desc.data[Y_DIM] = mpiDesc[Y_DIM];
+                mpi_desc.data[Z_DIM] = mpiDesc[Z_DIM];
+                mpi_desc.data[T_DIM] = mpiDesc[T_DIM];
                 mpi_setted = true;
             }
             break;

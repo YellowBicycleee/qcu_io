@@ -20,7 +20,7 @@ static void write_to_file_memcpy_GPU (
         std::complex<_FloatType> *device_src_data,       // 数据指针
         std::complex<_FloatType> *device_dst_data,       // 数据指针
         std::complex<_FloatType> *device_gauge_data,      // 数据指针
-        const LatticeConfig& lattice_config
+        const QcuHeader& lattice_config
     )
 {
     auto mrhs_colorspinor_length = lattice_config.MrhsColorSpinorLength();
@@ -50,7 +50,7 @@ static void write_to_file_memcpy_CPU (
         std::complex<_FloatType> *host_src_data,       // 数据指针
         std::complex<_FloatType> *host_dst_data,       // 数据指针
         std::complex<_FloatType> *host_gauge_data,     // 数据指针
-        const LatticeConfig& lattice_config
+        const QcuHeader& lattice_config
     )
 {
     auto mrhs_colorspinor_length = lattice_config.MrhsColorSpinorLength();
@@ -78,7 +78,7 @@ void read_from_file (
         std::complex<_FloatType> *device_dst_data,       // 数据指针
         std::complex<_FloatType> *device_gauge_data,     // 数据指针
         const std::string& file_path,                    // 文件路径
-        LatticeConfig& lattice_config_input
+        QcuHeader& lattice_config_input
     ) 
 {
     // 打开文件
@@ -100,8 +100,8 @@ void read_from_file (
     }
 
     // 读取文件头
-    LatticeConfig lattice_config_file;
-    memcpy(&lattice_config_file, data, sizeof(LatticeConfig));
+    QcuHeader lattice_config_file;
+    memcpy(&lattice_config_file, data, sizeof(QcuHeader));
     auto mrhs_colorspinor_length = lattice_config_file.MrhsColorSpinorLength();
     auto gauge_length = lattice_config_file.GaugeLength();
     // 检查mpi参数、lattice参数和Nc，mIn参数是否一致
@@ -114,7 +114,7 @@ void read_from_file (
     lattice_config_input.copy_info(lattice_config_file);
 
     // data前移动，跳过文件头
-    data = static_cast<void *>(static_cast<char *>(data) + sizeof(LatticeConfig));
+    data = static_cast<void *>(static_cast<char *>(data) + sizeof(QcuHeader));
     if (lattice_config_file.m_io_position & IOPosition::IO_FERMION_IN) {
         CHECK_CUDA(cudaMemcpy(device_src_data, data, mrhs_colorspinor_length * sizeof(std::complex<_FloatType>),
                     cudaMemcpyHostToDevice));
@@ -143,16 +143,16 @@ void write_to_file (
         std::complex<_FloatType> *device_dst_data,       // 数据指针
         std::complex<_FloatType> *device_gauge_data,     // 数据指针
         const std::string& file_path,                    // 文件路径
-        LatticeConfig& lattice_config
+        QcuHeader& lattice_config
     )
 {
     auto mrhs_colorspinor_length = lattice_config.MrhsColorSpinorLength();
     auto gauge_length = lattice_config.GaugeLength();
 
     // 打开文件
-    LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_WRITE_MODE);
+    LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_WRITE_CREATE_MODE);
 
-    auto newFileSize = sizeof(LatticeConfig) + 
+    auto newFileSize = sizeof(QcuHeader) + 
             (2 * mrhs_colorspinor_length + gauge_length) * sizeof (complex<_FloatType>);
 
     ftruncate(file_handler.fd, newFileSize);
@@ -169,9 +169,9 @@ void write_to_file (
     }
 
     // 写文件头
-    memcpy(data, &lattice_config, sizeof(LatticeConfig));
+    memcpy(data, &lattice_config, sizeof(QcuHeader));
     // data前移动，跳过文件头
-    data = static_cast<void *>(static_cast<char *>(data) + sizeof(LatticeConfig));
+    data = static_cast<void *>(static_cast<char *>(data) + sizeof(QcuHeader));
 
     write_to_file_memcpy_GPU<_FloatType>(data, device_src_data, device_dst_data, device_gauge_data, lattice_config);
 
@@ -185,7 +185,7 @@ template void read_from_file(
         std::complex<double> *device_dst_data,       // 数据指针
         std::complex<double> *device_gauge_data,     // 数据指针
         const std::string& file_path,                // 文件路径
-        LatticeConfig& lattice_config_input          // 命令行文件头，和文件存储文件头进行对比
+        QcuHeader& lattice_config_input          // 命令行文件头，和文件存储文件头进行对比
     );  
 
 template void write_to_file(
@@ -193,5 +193,5 @@ template void write_to_file(
         std::complex<double> *device_dst_data,       // 数据指针
         std::complex<double> *device_gauge_data,     // 数据指针
         const std::string& file_path,                // 文件路径
-        LatticeConfig& lattice_config
+        QcuHeader& lattice_config
     );
