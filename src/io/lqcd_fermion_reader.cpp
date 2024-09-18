@@ -69,3 +69,6 @@ void FermionReader<_FloatType>::read_fermion (std::complex<_FloatType>* memory_f
              + fermion_pos * fermion_length;
     read_fermion_kernel(memory_fermion, disk_fermion);
 }
+
+template class FermionReader<double>;
+template class FermionReader<float>;
