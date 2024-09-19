@@ -29,15 +29,15 @@ GaugeReader<_FloatType>::GaugeReader(const std::string& file_path,
             mpi_coord_(mpi_coord)
 {
     // 打开文件
-    file_handler_ = LatticeIOHandler(file_path, LatticeIOHandler::QCU_READ_MODE);
+    LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_MODE);
     struct stat st;
-    if(fstat(file_handler_.fd, &st) == -1)  {
+    if(fstat(file_handler.fd, &st) == -1)  {
         perror("fstat");
     }
     file_size_ = st.st_size;
 
     // mmap 映射
-    disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_READ, MAP_PRIVATE, file_handler_.fd, 0);
+    disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_READ, MAP_PRIVATE, file_handler.fd, 0);
     if (disk_mapped_ptr_ == MAP_FAILED || disk_mapped_ptr_ == nullptr) {
         throw std::runtime_error("MMAP failed\n");
     } 
@@ -46,7 +46,6 @@ GaugeReader<_FloatType>::GaugeReader(const std::string& file_path,
     memcpy(&header_, disk_mapped_ptr_, sizeof(QcuHeader));
 
     if (header_.m_storage_type != StorageType::TYPE_GAUGE) {
-        close(file_handler_.fd);
         if((msync((void*)disk_mapped_ptr_, file_size_, MS_SYNC)) == -1) { perror("msync");}
         if((munmap((void *)disk_mapped_ptr_, file_size_)) == -1)        { perror("munmap\n");}
         throw std::runtime_error("StorageType is not TYPE_GAUGE\n");
@@ -59,7 +58,6 @@ GaugeReader<_FloatType>::~GaugeReader() noexcept
     if (disk_mapped_ptr_ != nullptr) {
         if((msync((void*)disk_mapped_ptr_, file_size_, MS_SYNC)) == -1) { perror("msync");}
         if((munmap((void *)disk_mapped_ptr_, file_size_)) == -1)        { perror("munmap\n");}
-        close(file_handler_.fd);
     }
 }
 

@@ -32,20 +32,21 @@ GaugeWriter<_FloatType>::GaugeWriter(const std::string& file_path,
     auto gauge_length = header_.GaugeLength();
 
     // 打开文件, 写文件头预先留出文件长度
-    // file_handler_ = LatticeIOHandler(file_path, LatticeIOHandler::QCU_READ_WRITE_CREATE_MODE);
     LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_WRITE_CREATE_MODE);
-    file_handler_ = file_handler;
+    file_handler = file_handler;
     file_size_ = sizeof(QcuHeader) + (gauge_num * gauge_length) * sizeof (std::complex<_FloatType>);
-    int ret = ftruncate(file_handler_.fd, file_size_);
+    
+    std::cout << "file_path = " << file_path << ", gauge file_size_ = " << file_size_ << std::endl;
+    int ret = ftruncate(file_handler.fd, file_size_);
     if (ret == -1) {
         perror("ftruncate");
     }
-    ret = fsync(file_handler_.fd);
+    ret = fsync(file_handler.fd);
     if (ret == -1) {
         perror("fsync");
     }
 
-    disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_WRITE | PROT_READ, MAP_SHARED, file_handler_.fd, 0);
+    disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_WRITE | PROT_READ, MAP_SHARED, file_handler.fd, 0);
     if (disk_mapped_ptr_ == MAP_FAILED || disk_mapped_ptr_ == nullptr) {
         throw std::runtime_error("GaugeWriter MMAP failed\n");
     }
@@ -63,7 +64,6 @@ GaugeWriter<_FloatType>::~GaugeWriter() noexcept {
     if (disk_mapped_ptr_ != nullptr) {
         if((msync((void*)disk_mapped_ptr_, file_size_, MS_SYNC)) == -1) { perror("msync");}
         if((munmap((void *)disk_mapped_ptr_, file_size_)) == -1)        { perror("munmap\n");}
-        close(file_handler_.fd);
     }
 }
 

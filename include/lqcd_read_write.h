@@ -115,7 +115,6 @@ class GaugeWriter {
     const MPI_Desc&       mpi_desc_;
     const MPI_Coordinate& mpi_coord_;
     const QcuHeader&      header_;
-    LatticeIOHandler      file_handler_;
     void*                 disk_mapped_ptr_ = nullptr;
     void write_gauge_kernel (std::complex<_FloatType>* disk_gauge, std::complex<_FloatType>* memory_gauge);
 public:
@@ -130,7 +129,6 @@ class GaugeReader {
     const MPI_Desc&         mpi_desc_;
     const MPI_Coordinate&   mpi_coord_;
     QcuHeader&              header_;
-    LatticeIOHandler        file_handler_;
     void*                   disk_mapped_ptr_ = nullptr;
 
     void read_gauge_kernel (std::complex<_FloatType>* disk_gauge, std::complex<_FloatType>* memory_gauge);
@@ -147,7 +145,6 @@ class FermionWriter {
     const MPI_Desc&       mpi_desc_;
     const MPI_Coordinate& mpi_coord_;
     const QcuHeader&      header_;
-    LatticeIOHandler      file_handler_;
     void*                 disk_mapped_ptr_ = nullptr;
     void write_fermion_kernel (std::complex<_FloatType>* disk_fermion, std::complex<_FloatType>* memory_fermion);
 public:
@@ -162,7 +159,6 @@ class FermionReader {
     const MPI_Desc&         mpi_desc_;
     const MPI_Coordinate&   mpi_coord_;
     QcuHeader&              header_;
-    LatticeIOHandler        file_handler_;
     void*                   disk_mapped_ptr_ = nullptr;
 
     void read_fermion_kernel (std::complex<_FloatType>* disk_fermion, std::complex<_FloatType>* memory_fermion);

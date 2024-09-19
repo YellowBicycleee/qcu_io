@@ -25,7 +25,8 @@ int main(int argc, char* argv[]) {
   config.detail();
 
   assert(config.fermion_out_file_configured == 1 && config.gauge_out_file_configured == 1);
-
+  cout << "config.fermion_out_file = " << config.fermion_out_file << endl;
+  cout << "config.gauge_out_file = " << config.gauge_out_file << endl;
   QcuHeader fermionConfig;
   fermionConfig.m_data_format       = DataFormat::QUDA_FORMAT;
   fermionConfig.m_storage_precision = StoragePrecision::PRECISION_DOUBLE;

@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <string>
 #include <cstring>
+#include <iostream>
 
 template <typename _FloatType>
 void FermionWriter<_FloatType>::write_fermion_kernel 
@@ -29,12 +30,13 @@ FermionWriter<_FloatType>::FermionWriter
 
     // 打开文件, 写文件头预先留出文件长度
     LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_WRITE_CREATE_MODE);
-    file_handler_ = file_handler;
+    file_handler = file_handler;
     file_size_ = sizeof(QcuHeader) + (fermion_num * fermion_length) * sizeof (std::complex<_FloatType>);
     
-    ftruncate(file_handler_.fd, file_size_);
-    fsync(file_handler_.fd);
-    disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_WRITE | PROT_READ, MAP_SHARED, file_handler_.fd, 0);
+    std::cout << "file_path = " << file_path << ", fermion file_size_ = " << file_size_ << std::endl;
+    ftruncate(file_handler.fd, file_size_);
+    fsync(file_handler.fd);
+    disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_WRITE | PROT_READ, MAP_SHARED, file_handler.fd, 0);
     if (disk_mapped_ptr_ == MAP_FAILED || disk_mapped_ptr_ == nullptr) {
         throw std::runtime_error("FermionWriter MMAP failed\n");
     }
@@ -53,7 +55,6 @@ FermionWriter<_FloatType>::~FermionWriter() noexcept
     if (disk_mapped_ptr_ != nullptr) {
         if((msync((void*)disk_mapped_ptr_, file_size_, MS_SYNC)) == -1) { perror("msync");}
         if((munmap((void *)disk_mapped_ptr_, file_size_)) == -1)        { perror("munmap\n");}
-        close(file_handler_.fd);
     }
 }
 
