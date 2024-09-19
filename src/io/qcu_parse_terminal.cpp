@@ -177,11 +177,13 @@ void get_lattice_config(
                 config.gauge_out_file = std::string(optarg);
                 config.gauge_out_file_configured = 1;
             }
+            break;
         case 'f': // --file or -f
             {
                 config.fermion_in_file = std::string(optarg);
                 config.fermion_file_configured = 1;
             }
+            break;
         case 'F': // --file or -F
             {
                 config.fermion_out_file = std::string(optarg);
