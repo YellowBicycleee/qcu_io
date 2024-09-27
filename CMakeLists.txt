@@ -16,7 +16,9 @@ option(USE_CPM "Use CPM for dependency management" OFF)
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/io IO_SRC)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/latt_desc LATT_DESC)
-add_library(qcu_io SHARED ${IO_SRC} ${LATT_DESC})
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/base QCU_BASE)
+
+add_library(qcu_io SHARED ${IO_SRC} ${LATT_DESC} ${QCU_BASE})
 
 target_link_directories(qcu_io PUBLIC ${CMAKE_CUDA_COMPILER_LIBRARY_ROOT}/lib64)
 target_link_libraries(qcu_io PUBLIC cudart)
