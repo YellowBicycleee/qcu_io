@@ -12,3 +12,12 @@
 2. su(N) gauge：sunw和quda格式互相转换
 
 ### 3. 统一内存管理，将来使得QCU基于QCU_IO
+
+
+## 使用
+
+一个成功执行的例子：
+
+```SHELL
+./test_output --mpi 1.1.1.1 --lattice 2.2.2.2 --color 3 --mIn 1  --gauge_out gauge_out --fermion_out fermion_out
+```
