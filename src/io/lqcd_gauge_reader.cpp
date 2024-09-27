@@ -39,7 +39,7 @@ GaugeReader<_FloatType>::GaugeReader(const std::string& file_path,
     // mmap 映射
     disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_READ, MAP_PRIVATE, file_handler.fd, 0);
     if (disk_mapped_ptr_ == MAP_FAILED || disk_mapped_ptr_ == nullptr) {
-        throw std::runtime_error("MMAP failed\n");
+        throw std::runtime_error("GaugeReader MMAP failed\n");
     } 
 
     // 读取文件头
