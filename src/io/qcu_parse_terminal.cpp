@@ -38,7 +38,7 @@ void TerminalConfig::detail() {
         fprintf(stdout, "gauge_out_file is not configured\n");
     }
     // FERMION_IN_FILE name
-    if (fermion_file_configured) {
+    if (fermion_in_file_configured) {
         fprintf(stdout, "fermion_in_file = %s\n", fermion_in_file.c_str());
     }
     else {
@@ -181,7 +181,7 @@ void get_lattice_config(
         case 'f': // --file or -f
             {
                 config.fermion_in_file = std::string(optarg);
-                config.fermion_file_configured = 1;
+                config.fermion_in_file_configured = 1;
             }
             break;
         case 'F': // --file or -F
