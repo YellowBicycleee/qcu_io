@@ -2,7 +2,7 @@
 #include <cuda_fp16.h>
 #include <type_traits>
 
-#include "qcu_enum.h"
+#include "qcu_public.h"
 namespace qcu {
 
 // Float2Wrapper find matching Float2 with Float
