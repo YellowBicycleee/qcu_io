@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#define NOT_IMPLEMENTED "Not implemented yet\n" 
+
 #define QCU_DEVICE __device__ 
 #define QCU_HOST __host__
 #define QCU_DEVICE_HOST __host__ __device__
@@ -18,7 +20,7 @@ enum class DataFormat : uint8_t {
     QUDA_FORMAT_EO_PRECONDITONED,
     QDP_FORMAT,
 };
-enum class StoragePrecision : uint8_t {
+enum class QCU_PRECISION : uint8_t {
     PRECISION_UNKNOWN = 0,
     PRECISION_HALF,
     PRECISION_FLOAT,
@@ -36,9 +38,86 @@ enum class MrhsShuffled : uint8_t {
     MRHS_SHUFFLED_YES,      // m个向量的元素相邻
 };
 
-enum LatticeDimension : int32_t {
+// enum LatticeDimension : int32_t {
+//     X_DIM = 0,
+//     Y_DIM,
+//     Z_DIM,
+//     T_DIM,
+// };
+
+// FROM QCU
+// clang-format off
+// enum QCU_PRECISION {   // precision
+//     QCU_HALF_PRECISION = 0, 
+//     QCU_SINGLE_PRECISION = 1,
+//     QCU_DOUBLE_PRECISION,
+//     QCU_PRECISION_UNDEFINED
+// };
+
+enum QCU_PRECONDITION { 
+    QCU_NO_PRECONDITION = 0,
+    QCU_EO_PC_4D 
+};
+
+enum QCU_PARITY {
+    EVEN_PARITY = 0,
+    ODD_PARITY = 1,
+    PARITY = 2
+};
+
+enum DIMS : int32_t {
     X_DIM = 0,
     Y_DIM,
     Z_DIM,
     T_DIM,
 };
+
+enum DIRS {
+    BWD = 0,
+    FWD = 1,
+    DIRECTIONS
+};
+
+enum QCU_DAGGER_FLAG { 
+    QCU_DAGGER_NO = 0, 
+    QCU_DAGGER_YES, 
+    QCU_DAGGER_UNDEFINED 
+};
+
+enum DSLASH_TYPE {
+    DSLASH_WILSON = 0, 
+    DSLASH_CLOVER,
+    DSLASH_UNKNOWN
+};
+
+enum MemoryStorage {
+    NON_COALESCED = 0,
+    COALESCED = 1,
+};
+
+enum ShiftDirection {
+    TO_COALESCE = 0,
+    TO_NON_COALESCE = 1,
+};
+
+enum MatrixOrder {
+    ROW_MAJOR = 0,
+    COLUMN_MAJOR = 1,
+};
+
+#define errorQcu(msg)                                                                \
+    do {                                                                             \
+        fprintf(stderr, msg);                                                        \
+        fprintf(stderr, "Error happened in file %s, line %d\n", __FILE__, __LINE__); \
+        exit(1);                                                                     \
+    } while (0)
+
+
+constexpr int MAX_DIM = 4;
+constexpr int WARP_SIZE = 32;
+constexpr int WARP_PER_BLOCK = 1;
+constexpr int MAX_THREADS_PER_BLOCK = 1024;
+
+#define IDX2D(y, x, lx) ((y) * (lx) + (x))
+#define IDX3D(z, y, x, ly, lx) ((((z) * (ly)) + (y)) * (lx) + (x))
+#define IDX4D(t, z, y, x, lz, ly, lx) ((((t) * (lz) + (z)) * (ly) + (y)) * (lx) + (x))
