@@ -105,6 +105,20 @@ enum MatrixOrder {
     COLUMN_MAJOR = 1,
 };
 
+enum BufferDataType {
+    QCU_FERMION_TZYXSC = 0,
+    QCU_FERMION_PTZYXSC,
+    QCU_FERMION_PTZYXSC_EVEN,
+    QCU_FERMION_PTZYXSC_ODD,
+    QCU_FERMION_TZYXSCM,
+    QCU_FERMION_PTZYXSCM,
+    QCU_FERMION_PTZYXSCM_EVEN,
+    QCU_FERMION_PTZYXSCM_ODD,
+    // GAUGE
+    QCU_GAUGE_DTZYXCC,
+    QCU_GAUGE_DPTZYXCC
+};
+
 #define errorQcu(msg)                                                                \
     do {                                                                             \
         fprintf(stderr, msg);                                                        \
