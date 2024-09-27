@@ -8,7 +8,7 @@
 struct TerminalConfig {
     uint8_t gauge_in_file_configured = 0;
     uint8_t gauge_out_file_configured = 0;
-    uint8_t fermion_file_configured = 0;
+    uint8_t fermion_in_file_configured = 0;
     uint8_t fermion_out_file_configured = 0;
     uint8_t lattice_configured = 0;
     uint8_t mpi_configured = 0;
