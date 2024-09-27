@@ -1,5 +1,8 @@
 #pragma once
-#include <cuda_runtime_api.h>
+#include <cstdio>
+#define DEBUG
+#ifdef DEBUG
+
 #define CHECK_CUDA(ans) do { cudaAssert((ans), __FILE__, __LINE__); } while (0) 
 
 inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -11,3 +14,7 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=
       if (abort) exit(code);
    }
 }
+#else
+#define CHECK_CUDA(ans) ans
+#endif
+
