@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
   cout << "config.gauge_out_file = " << config.gauge_out_file << endl;
   QcuHeader fermionConfig;
   fermionConfig.m_data_format       = DataFormat::QUDA_FORMAT;
-  fermionConfig.m_storage_precision = StoragePrecision::PRECISION_DOUBLE;
+  fermionConfig.m_storage_precision = QCU_PRECISION::PRECISION_DOUBLE;
   fermionConfig.m_mrhs_shuffled     = MrhsShuffled::MRHS_SHUFFLED_NO;
   fermionConfig.m_storage_type      = StorageType::TYPE_FERMION;
   fermionConfig.m_lattice_desc      = config.lattice_desc;
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
 
   QcuHeader gaugeConfig;
   gaugeConfig.m_data_format       = DataFormat::QUDA_FORMAT;
-  gaugeConfig.m_storage_precision = StoragePrecision::PRECISION_DOUBLE;
+  gaugeConfig.m_storage_precision = QCU_PRECISION::PRECISION_DOUBLE;
   gaugeConfig.m_mrhs_shuffled     = MrhsShuffled::MRHS_SHUFFLED_NO;
   gaugeConfig.m_storage_type      = StorageType::TYPE_GAUGE;
   gaugeConfig.m_lattice_desc      = config.lattice_desc;
