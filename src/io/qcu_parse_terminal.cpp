@@ -54,7 +54,7 @@ void TerminalConfig::detail() {
 }
 
 static void print_usage(const char* arg) {
-    fprintf(stderr, "Usage: %s --mpi mpi_str --lattice latt_size --Nc c --mIn m [--gauge_in file1 ] [--gauge_out file2] [--fermion_in file3] [--fermion_out file4] \n", arg);
+    fprintf(stderr, "Usage: %s --mpi mpi_str --lattice latt_size --color c --mIn m [--gauge_in file1 ] [--gauge_out file2] [--fermion_in file3] [--fermion_out file4] \n", arg);
     fprintf(stderr, "          --mpi  x.y.z.t         how many mpi in each direction, example 1.1.1.1\n");
     fprintf(stderr, "          --lattice  x.y.z.t     how many lattice in each direction, example 4.4.4.4\n");
     fprintf(stderr, "          --color  c             how many color, example 3\n");
