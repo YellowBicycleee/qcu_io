@@ -20,12 +20,12 @@ enum class DataFormat : uint8_t {
     QUDA_FORMAT_EO_PRECONDITONED,
     QDP_FORMAT,
 };
-enum class QCU_PRECISION : uint8_t {
-    PRECISION_UNKNOWN = 0,
-    PRECISION_HALF,
-    PRECISION_FLOAT,
-    PRECISION_DOUBLE
-};
+// enum class QCU_PRECISION : uint8_t {
+//     PRECISION_UNKNOWN = 0,
+//     PRECISION_HALF,
+//     PRECISION_FLOAT,
+//     PRECISION_DOUBLE
+// };
 
 enum class StorageType : uint8_t {
     TYPE_UNKNOWN = 0,
@@ -47,12 +47,12 @@ enum class MrhsShuffled : uint8_t {
 
 // FROM QCU
 // clang-format off
-// enum QCU_PRECISION {   // precision
-//     QCU_HALF_PRECISION = 0, 
-//     QCU_SINGLE_PRECISION = 1,
-//     QCU_DOUBLE_PRECISION,
-//     QCU_PRECISION_UNDEFINED
-// };
+enum QCU_PRECISION {   // precision
+    QCU_HALF_PRECISION = 0, 
+    QCU_SINGLE_PRECISION = 1,
+    QCU_DOUBLE_PRECISION,
+    QCU_PRECISION_UNDEFINED
+};
 
 enum QCU_PRECONDITION { 
     QCU_NO_PRECONDITION = 0,
