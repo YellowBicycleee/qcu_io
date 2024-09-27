@@ -1,6 +1,12 @@
 #pragma once
 
 #include <cstdint>
+
+#define QCU_DEVICE __device__ 
+#define QCU_HOST __host__
+#define QCU_DEVICE_HOST __host__ __device__
+#define QCU_GLOBAL __global__
+
 constexpr int MAGIC_BYTE_SIZE = 4;
 constexpr int Nd = 4; // 4维
 constexpr int Ns = 4; // nSpinor = 4
