@@ -1,3 +1,6 @@
+#pragma once
+#include "base/datatype/qcu_complex.cuh"
+#include "lattice_desc.h"
 namespace qcu {
 
 template <typename _Float>
