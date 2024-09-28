@@ -91,4 +91,8 @@ void GaugeEOPreconditioner<_Float>::reverse(Complex<_Float>* output, Complex<_Fl
 template class EOPreconditioner<float>;
 template class EOPreconditioner<double>;
 template class EOPreconditioner<half>;
+
+template class GaugeEOPreconditioner<float>;
+template class GaugeEOPreconditioner<double>;
+template class GaugeEOPreconditioner<half>;
 }  // namespace qcu
