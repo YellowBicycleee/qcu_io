@@ -106,6 +106,7 @@ enum MatrixOrder {
 };
 
 enum BufferDataType {
+    QCU_BUFFER_DATATYPE_UNKNOWN = 0,
     QCU_FERMION_TZYXSC = 0,
     QCU_FERMION_PTZYXSC,
     QCU_FERMION_PTZYXSC_EVEN,
