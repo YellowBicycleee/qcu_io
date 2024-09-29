@@ -5,10 +5,10 @@
 namespace kernel {
 
 template <typename _Float>
-__forceinline__ __device__ void eo_precondition_4D_operator(Complex<_Float>* output,
-                                                            Complex<_Float>* input, int Lx, int Ly,
-                                                            int Lz, int Lt, int site_vec_len,
-                                                            int cell_id) {
+__forceinline__ __device__ void eo_precondition_4D_operator(Complex<_Float>* __restrict__ output,
+                                                            Complex<_Float>* __restrict__ input,
+                                                            int Lx, int Ly, int Lz, int Lt,
+                                                            int site_vec_len, int cell_id) {
   // coord without precondition
   int x = cell_id % Lx;  // 不进行预处理的坐标x
   int x_prec = x / 2;    // 进行预处理的坐标x
@@ -29,8 +29,9 @@ __forceinline__ __device__ void eo_precondition_4D_operator(Complex<_Float>* out
 }
 
 template <typename _Float>
-__global__ void eo_precondition_4D(Complex<_Float>* output, Complex<_Float>* input, int Lx, int Ly,
-                                int Lz, int Lt, int site_vec_len) {
+__global__ void eo_precondition_4D(Complex<_Float>* __restrict__ output,
+                                   Complex<_Float>* __restrict__ input, int Lx, int Ly, int Lz,
+                                   int Lt, int site_vec_len) {
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = gridDim.x * blockDim.x;
 
@@ -41,10 +42,9 @@ __global__ void eo_precondition_4D(Complex<_Float>* output, Complex<_Float>* inp
 
 // reverse the even-odd preconditioning
 template <typename _Float>
-__forceinline__ __device__ void reverse_eo_precondition_4D_operator(Complex<_Float>* output,
-                                                                 Complex<_Float>* input, int Lx,
-                                                                 int Ly, int Lz, int Lt,
-                                                                 int site_vec_len, int cell_id) {
+__forceinline__ __device__ void reverse_eo_precondition_4D_operator(
+    Complex<_Float>* __restrict__ output, Complex<_Float>* __restrict__ input, int Lx, int Ly,
+    int Lz, int Lt, int site_vec_len, int cell_id) {
   // coord without precondition
   int x = cell_id % Lx;  // 不进行预处理的坐标x
   int x_prec = x / 2;    // 进行预处理的坐标x
@@ -65,13 +65,15 @@ __forceinline__ __device__ void reverse_eo_precondition_4D_operator(Complex<_Flo
 }
 
 template <typename _Float>
-__global__ void reverse_eo_precondition_4D(Complex<_Float>* output, Complex<_Float>* input,
-                                                 int Lx, int Ly, int Lz, int Lt, int site_vec_len) {
+__global__ void reverse_eo_precondition_4D(Complex<_Float>* __restrict__ output,
+                                           Complex<_Float>* __restrict__ input, int Lx, int Ly,
+                                           int Lz, int Lt, int site_vec_len) {
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = gridDim.x * blockDim.x;
 
   for (int cell_id = tid; cell_id < Lx * Ly * Lz * Lt; cell_id += stride) {
-    eo_precondition_4D_operator<_Float>(output, input, Lx, Ly, Lz, Lt, site_vec_len, cell_id);
+    reverse_eo_precondition_4D_operator<_Float>(output, input, Lx, Ly, Lz, Lt, site_vec_len,
+                                                cell_id);
   }
 }
 

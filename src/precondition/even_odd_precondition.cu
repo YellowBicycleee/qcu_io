@@ -7,9 +7,9 @@
 namespace qcu {
 
 template <typename _Float>
-void EOPreconditioner<_Float>::apply(Complex<_Float>* output, Complex<_Float>* input,
-                                     const Latt_Desc& desc, int site_vec_len, int Nd,
-                                     void* stream) {
+void EOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
+                                     Complex<_Float>* __restrict__ input, const Latt_Desc& desc,
+                                     int site_vec_len, [[maybe_unused]] int Nd, void* stream) {
   int Lx = desc.data[X_DIM];
   int Ly = desc.data[Y_DIM];
   int Lz = desc.data[Z_DIM];
@@ -25,9 +25,9 @@ void EOPreconditioner<_Float>::apply(Complex<_Float>* output, Complex<_Float>* i
   CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
 }
 template <typename _Float>
-void EOPreconditioner<_Float>::reverse(Complex<_Float>* output, Complex<_Float>* input,
-                                       const Latt_Desc& desc, int site_vec_len, int Nd,
-                                       void* stream) {
+void EOPreconditioner<_Float>::reverse(Complex<_Float>* __restrict__ output,
+                                       Complex<_Float>* __restrict__ input, const Latt_Desc& desc,
+                                       int site_vec_len, [[maybe_unused]] int Nd, void* stream) {
   int Lx = desc.data[X_DIM];
   int Ly = desc.data[Y_DIM];
   int Lz = desc.data[Z_DIM];
@@ -44,9 +44,10 @@ void EOPreconditioner<_Float>::reverse(Complex<_Float>* output, Complex<_Float>*
 }
 
 template <typename _Float>
-void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* output, Complex<_Float>* input,
-                                          const Latt_Desc& desc, int site_vec_len, int Nd,
-                                          void* stream) {
+void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
+                                          Complex<_Float>* __restrict__ input,
+                                          const Latt_Desc& desc, int site_vec_len,
+                                          [[maybe_unused]] int Nd, void* stream) {
   int Lx = desc.data[X_DIM];
   int Ly = desc.data[Y_DIM];
   int Lz = desc.data[Z_DIM];
@@ -66,9 +67,10 @@ void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* output, Complex<_Floa
 }
 
 template <typename _Float>
-void GaugeEOPreconditioner<_Float>::reverse(Complex<_Float>* output, Complex<_Float>* input,
-                                            const Latt_Desc& desc, int site_vec_len, int Nd,
-                                            void* stream) {
+void GaugeEOPreconditioner<_Float>::reverse(Complex<_Float>* __restrict__ output,
+                                            Complex<_Float>* __restrict__ input,
+                                            const Latt_Desc& desc, int site_vec_len,
+                                            [[maybe_unused]] int Nd, void* stream) {
   int Lx = desc.data[X_DIM];
   int Ly = desc.data[Y_DIM];
   int Lz = desc.data[Z_DIM];
