@@ -22,7 +22,7 @@ void EOPreconditioner<_Float>::apply(Complex<_Float>* output, Complex<_Float>* i
       <<<blocks, threads_per_block, 0, static_cast<cudaStream_t>(stream)>>>(output, input, Lx, Ly,
                                                                             Lz, Lt, site_vec_len);
   CHECK_CUDA(cudaGetLastError());
-  CHECK_CUDA(cudaDeviceSynchronize());
+  CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
 }
 template <typename _Float>
 void EOPreconditioner<_Float>::reverse(Complex<_Float>* output, Complex<_Float>* input,
@@ -40,7 +40,7 @@ void EOPreconditioner<_Float>::reverse(Complex<_Float>* output, Complex<_Float>*
       <<<blocks, threads_per_block, 0, static_cast<cudaStream_t>(stream)>>>(output, input, Lx, Ly,
                                                                             Lz, Lt, site_vec_len);
   CHECK_CUDA(cudaGetLastError());
-  CHECK_CUDA(cudaDeviceSynchronize());
+  CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
 }
 
 template <typename _Float>
@@ -62,7 +62,7 @@ void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* output, Complex<_Floa
             mu_output, mu_input, Lx, Ly, Lz, Lt, site_vec_len);
   }
   CHECK_CUDA(cudaGetLastError());
-  CHECK_CUDA(cudaDeviceSynchronize());
+  CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
 }
 
 template <typename _Float>
@@ -85,7 +85,7 @@ void GaugeEOPreconditioner<_Float>::reverse(Complex<_Float>* output, Complex<_Fl
             mu_output, mu_input, Lx, Ly, Lz, Lt, site_vec_len);
   }
   CHECK_CUDA(cudaGetLastError());
-  CHECK_CUDA(cudaDeviceSynchronize());
+  CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
 }
 
 template class EOPreconditioner<float>;
