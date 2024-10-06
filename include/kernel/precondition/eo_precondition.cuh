@@ -20,9 +20,10 @@ __forceinline__ __device__ void eo_precondition_4D_operator(Complex<_Float>* __r
 
   Complex<_Float>* dst =
       output +
-      (parity * Lx / 2 * Ly * Lz * Lt + (IDX4D(t, z, y, x_prec, Lz, Ly, Lx))) * site_vec_len;
+      (parity * Lx / 2 * Ly * Lz * Lt + (IDX4D(t, z, y, x_prec, Lz, Ly, Lx / 2))) * site_vec_len;
   Complex<_Float>* src = input + cell_id * site_vec_len;
 
+#pragma unroll
   for (int i = 0; i < site_vec_len; i++) {
     dst[i] = src[i];
   }
@@ -45,7 +46,7 @@ template <typename _Float>
 __forceinline__ __device__ void reverse_eo_precondition_4D_operator(
     Complex<_Float>* __restrict__ output, Complex<_Float>* __restrict__ input, int Lx, int Ly,
     int Lz, int Lt, int site_vec_len, int cell_id) {
-  // coord without precondition
+
   int x = cell_id % Lx;  // 不进行预处理的坐标x
   int x_prec = x / 2;    // 进行预处理的坐标x
   int y = (cell_id / Lx) % Ly;
@@ -54,11 +55,12 @@ __forceinline__ __device__ void reverse_eo_precondition_4D_operator(
 
   int parity = (x + y + z + t) % 2;
 
+  Complex<_Float>* dst = output + cell_id * site_vec_len;
   Complex<_Float>* src =
       input +
-      (parity * Lx / 2 * Ly * Lz * Lt + (IDX4D(t, z, y, x_prec, Lz, Ly, Lx))) * site_vec_len;
-  Complex<_Float>* dst = input + cell_id * site_vec_len;
+      (parity * Lx / 2 * Ly * Lz * Lt + (IDX4D(t, z, y, x_prec, Lz, Ly, Lx / 2))) * site_vec_len;
 
+#pragma unroll
   for (int i = 0; i < site_vec_len; i++) {
     dst[i] = src[i];
   }
