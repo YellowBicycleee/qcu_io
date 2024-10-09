@@ -21,10 +21,13 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src/precondition QCU_PRECONDITION)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/buffer_shape QCU_BUFFER_SHAPE)
 
 add_library(qcu_io SHARED ${IO_SRC} ${LATT_DESC} ${QCU_BASE} ${QCU_PRECONDITION} ${QCU_BUFFER_SHAPE})
+add_library(qcu_io_static STATIC ${IO_SRC} ${LATT_DESC} ${QCU_BASE} ${QCU_PRECONDITION} ${QCU_BUFFER_SHAPE})
 
-target_link_directories(qcu_io PUBLIC ${CMAKE_CUDA_COMPILER_LIBRARY_ROOT}/lib64)
-target_link_libraries(qcu_io PUBLIC cudart)
+# target_link_directories(qcu_io PUBLIC ${CMAKE_CUDA_COMPILER_LIBRARY_ROOT}/lib64)
+# target_link_libraries(qcu_io PUBLIC cudart)
 target_include_directories(qcu_io PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(qcu_io PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
+target_include_directories(qcu_io_static PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(qcu_io_static PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 add_subdirectory(test)
