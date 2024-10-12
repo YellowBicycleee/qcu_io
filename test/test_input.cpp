@@ -56,10 +56,12 @@ int main(int argc, char* argv[]) {
   cout << "gauge_len = " << gauge_len << endl;
 
   MPI_Coordinate coord;
+  Latt_Desc lattice_desc = config.lattice_desc;
   GaugeReader<double> gaugeReader(config.gauge_in_file, 
                                   gaugeConfig, 
                                   config.mpi_desc, 
-                                  coord);
+                                  coord,
+                                  lattice_desc);
   gaugeReader.read_gauge(h_gauge_ptr, 0);
 
   FermionReader<double> fermionReader(config.fermion_in_file, 

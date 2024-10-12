@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
-
+#include <cassert>
 // 单进程实现
 template <typename _FloatType>
 void GaugeReader<_FloatType>::read_gauge_kernel (std::complex<_FloatType>* memory_gauge, 
@@ -23,10 +23,12 @@ template <typename _FloatType>
 GaugeReader<_FloatType>::GaugeReader(const std::string& file_path, 
                                      QcuHeader& header,
                                      const MPI_Desc& mpi_desc,
-                                     const MPI_Coordinate& mpi_coord) 
+                                     const MPI_Coordinate& mpi_coord,
+                                     const Latt_Desc& lattice_desc) 
           : header_(header),
             mpi_desc_(mpi_desc),
-            mpi_coord_(mpi_coord)
+            mpi_coord_(mpi_coord),
+            lattice_desc_(lattice_desc)
 {
     // 打开文件
     LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_MODE);
@@ -44,6 +46,10 @@ GaugeReader<_FloatType>::GaugeReader(const std::string& file_path,
 
     // 读取文件头
     memcpy(&header_, disk_mapped_ptr_, sizeof(QcuHeader));
+#pragma unroll
+    for (int i = 0; i < 4; i++) {
+        assert(header_.m_lattice_desc.data[i] == lattice_desc_.data[i]);
+    }
 
     if (header_.m_storage_type != StorageType::TYPE_GAUGE) {
         if((msync((void*)disk_mapped_ptr_, file_size_, MS_SYNC)) == -1) { perror("msync");}

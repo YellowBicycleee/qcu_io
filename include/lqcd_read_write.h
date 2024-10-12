@@ -130,10 +130,12 @@ class GaugeReader {
     const MPI_Coordinate&   mpi_coord_;
     QcuHeader&              header_;
     void*                   disk_mapped_ptr_ = nullptr;
+    const Latt_Desc &       lattice_desc_;
 
     void read_gauge_kernel (std::complex<_FloatType>* disk_gauge, std::complex<_FloatType>* memory_gauge);
 public:
-    GaugeReader(const std::string& file_path, QcuHeader& header, const MPI_Desc& mpi_desc, const MPI_Coordinate& mpi_coord);
+    GaugeReader(const std::string& file_path, QcuHeader& header, const MPI_Desc& mpi_desc, 
+                const MPI_Coordinate& mpi_coord, const Latt_Desc& lattice_desc);
     ~GaugeReader() noexcept;
     void read_gauge (std::complex<_FloatType>* memory_gauge, int gauge_pos);
 };
