@@ -130,7 +130,7 @@ enum BufferDataType {
 
 constexpr int MAX_DIM = 4;
 constexpr int WARP_SIZE = 32;
-constexpr int WARP_PER_BLOCK = 1;
+constexpr int WARP_PER_BLOCK = 4;
 constexpr int MAX_THREADS_PER_BLOCK = 1024;
 
 #define IDX2D(y, x, lx) ((y) * (lx) + (x))
