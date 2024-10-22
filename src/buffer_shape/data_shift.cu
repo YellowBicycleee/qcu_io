@@ -10,7 +10,8 @@ static inline __device__ __host__ int div_ceil(int a, int b) { return (a + b - 1
 
 template <typename _Tp>
 // transpose input(m * n) to output(n * m)
-static __global__ void transpose2D_kernel(_Tp* output, const _Tp* input, int m, int n) {
+__global__ void transpose2D_kernel (_Tp* output, const _Tp* input, int m, int n) {
+
   int block_x_stride = gridDim.x;
   int block_y_stride = gridDim.y;
 
@@ -31,7 +32,7 @@ static __global__ void transpose2D_kernel(_Tp* output, const _Tp* input, int m, 
 
       int logic_out_x = j * blockDim.y + threadIdx.x;
       int logic_out_y = i * blockDim.x + threadIdx.y;
-
+  
       if (logic_out_y < n && logic_out_x < m) {
         output[logic_out_y * m + logic_out_x] = tile[threadIdx.x][threadIdx.y];
       }
@@ -43,18 +44,14 @@ static __global__ void transpose2D_kernel(_Tp* output, const _Tp* input, int m, 
 template <typename _Float>
 void gauge_from_sunwEO_to_qudaEO(Complex<_Float>* qudaEO_guage, Complex<_Float>* sunwEO_gauge,
                                  int nc_square, int quard_vol, void* stream) {
-  int device_id;
-  cudaDeviceProp prop;
-  CHECK_CUDA(cudaGetDevice(&device_id));
-  CHECK_CUDA(cudaGetDeviceProperties(&prop, device_id));
-  int max_block_x = prop.maxGridSize[0];
-  int max_block_y = prop.maxGridSize[0];
+  int max_block_x = 1 << 16;
+  int max_block_y = (1 << 16) - 1;
 
   int threads_per_block_x = N_TILE;
   int threads_per_block_y = M_TILE;
   int blocks_per_grid_y = std::min(div_ceil(nc_square, threads_per_block_y), max_block_y);
   int blocks_per_grid_x =
-      std::min(div_ceil(quard_vol, threads_per_block_x), max_block_x / max_block_y);
+      std::min(div_ceil(quard_vol, threads_per_block_x), max_block_x);
 
   dim3 block_size(threads_per_block_x, threads_per_block_y);
   dim3 grid_size(blocks_per_grid_x, blocks_per_grid_y);
@@ -69,18 +66,14 @@ void gauge_from_sunwEO_to_qudaEO(Complex<_Float>* qudaEO_guage, Complex<_Float>*
 template <typename _Float>
 void from_qudaEO_to_sunwEO(Complex<_Float>* sunwEO_gauge, Complex<_Float>* qudaEO_gauge,
                            int quard_vol, int nc_square, void* stream) {
-  int device_id;
-  cudaDeviceProp prop;
-  CHECK_CUDA(cudaGetDevice(&device_id));
-  CHECK_CUDA(cudaGetDeviceProperties(&prop, device_id));
-  int max_block_x = prop.maxGridSize[0];
-  int max_block_y = prop.maxGridSize[0];
+  int max_block_x = 1 << 16;      
+  int max_block_y = (1 << 16) - 1;
 
   int threads_per_block_x = N_TILE;
   int threads_per_block_y = M_TILE;
   int blocks_per_grid_y = std::min(div_ceil(quard_vol, threads_per_block_y), max_block_y);
   int blocks_per_grid_x =
-      std::min(div_ceil(nc_square, threads_per_block_x), max_block_x / max_block_y);
+      std::min(div_ceil(nc_square, threads_per_block_x), max_block_x);
 
   dim3 block_size(threads_per_block_x, threads_per_block_y);
   dim3 grid_size(blocks_per_grid_x, blocks_per_grid_y);
