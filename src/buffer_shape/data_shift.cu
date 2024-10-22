@@ -3,7 +3,7 @@
 namespace qcu {
 
 static constexpr int M_TILE = 32;
-static constexpr int N_TILE = 16;
+static constexpr int N_TILE = 32;
 
 static inline __device__ __host__ int div_ceil(int a, int b) { return (a + b - 1) / b; }
 // constexpr int
