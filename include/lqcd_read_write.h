@@ -49,7 +49,7 @@ struct QcuHeader
 {
     unsigned char  m_magic[MAGIC_BYTE_SIZE] = {0x7f, 'Q', 'C', 'U'};
     DataFormat       m_data_format       = DataFormat::QUDA_FORMAT;
-    QCU_PRECISION m_storage_precision = QCU_PRECISION::QCU_DOUBLE_PRECISION; // 默认double
+    QcuPrecision m_storage_precision = QcuPrecision::kPrecisionDouble; // 默认double
     MrhsShuffled     m_mrhs_shuffled     = MrhsShuffled::MRHS_SHUFFLED_NO;
     StorageType      m_storage_type      = StorageType::TYPE_UNKNOWN;
     Latt_Desc        m_lattice_desc;

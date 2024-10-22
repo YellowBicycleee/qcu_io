@@ -19,7 +19,7 @@ public:
     //       ) {}
 private:
     bool use_external_ = false;
-    QCU_PRECISION precision_ = QCU_PRECISION::QCU_PRECISION_UNDEFINED;
+    QcuPrecision precision_ = QcuPrecision::kPrecisionUndefined;
     // 描述数据的排布
     BufferDataType buffer_data_type_;
     Latt_Desc& lattice_desc_;    // 描述lattice的维度

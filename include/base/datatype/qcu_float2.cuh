@@ -30,21 +30,21 @@ using Float2_t = typename Float2Wrapper<Float>::Float2;
 
 
 // Float2WrapperFromPrecision find matching Float and Float2 with precision
-template <QCU_PRECISION precision>
+template <QcuPrecision precision>
 struct Float2WrapperFromPrecision; 
 
 template <>
-struct Float2WrapperFromPrecision <QCU_PRECISION::QCU_SINGLE_PRECISION> {
+struct Float2WrapperFromPrecision <QcuPrecision::kPrecisionSingle> {
     using Float = float;
     using Float2 = float2;
 };
 template <>
-struct Float2WrapperFromPrecision<QCU_PRECISION::QCU_DOUBLE_PRECISION> {
+struct Float2WrapperFromPrecision<QcuPrecision::kPrecisionDouble> {
     using Float = double;
     using Float2 = double2;
 };
 template <>
-struct Float2WrapperFromPrecision<QCU_PRECISION::QCU_HALF_PRECISION> {
+struct Float2WrapperFromPrecision<QcuPrecision::kPrecisionHalf> {
     using Float = half;
     using Float2 = half2;
 };

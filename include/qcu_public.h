@@ -30,11 +30,11 @@ enum class MrhsShuffled : uint8_t {
 
 // FROM QCU
 // clang-format off
-enum QCU_PRECISION {   // precision
-    QCU_HALF_PRECISION = 0, 
-    QCU_SINGLE_PRECISION = 1,
-    QCU_DOUBLE_PRECISION,
-    QCU_PRECISION_UNDEFINED
+enum QcuPrecision {   // precision
+    kPrecisionHalf = 0, 
+    kPrecisionSingle,
+    kPrecisionDouble,
+    kPrecisionUndefined
 };
 
 enum QCU_PRECONDITION { 
