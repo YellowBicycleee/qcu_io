@@ -61,17 +61,17 @@ enum DIRS {
     DIRECTIONS
 };
 
-enum QCU_DAGGER_FLAG { 
-    QCU_DAGGER_NO = 0, 
-    QCU_DAGGER_YES, 
-    QCU_DAGGER_UNDEFINED 
-};
+// enum QcuDaggerFlag { 
+//     kDaggerNo = 0, 
+//     kDaggerYes, 
+//     kDaggerUndefined 
+// };
 
-enum DSLASH_TYPE {
-    DSLASH_WILSON = 0, 
-    DSLASH_CLOVER,
-    DSLASH_UNKNOWN
-};
+// enum DslashType {
+//     kDslashWilson = 0, 
+//     kDslashClover,
+//     kDslashUnkown
+// };
 
 enum MemoryStorage {
     NON_COALESCED = 0,
