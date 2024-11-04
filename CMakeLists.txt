@@ -7,11 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 project(QCU_IO LANGUAGES CXX CUDA)
-include(cmake/cuda.cmake)
+# include(cmake/cuda.cmake)
 
 # ---- Add dependencies via CPM ----
 # see https://github.com/TheLartians/CPM.cmake for more info
-option(USE_CPM "Use CPM for dependency management" OFF)
+# option(USE_CPM "Use CPM for dependency management" OFF)
 
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/io IO_SRC)
