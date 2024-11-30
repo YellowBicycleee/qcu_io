@@ -15,7 +15,7 @@ class Complex {
     __device__ __host__ __forceinline__ Complex(const qcu::Float2_t<_Float> &rhs) : real_(rhs.x), imag_(rhs.y) {}
     __device__ __host__ __forceinline__ Complex(_Float real, _Float imag) : real_(real), imag_(imag) {}
     Complex() = default;
-    __device__ __host__ __forceinline__ Complex(const Complex &complex) : real_(complex.real_), imag_(complex.imag_) {}
+    __device__ __host__ __forceinline__ Complex(const Complex &rhs) : real_(rhs.real_), imag_(rhs.imag_) {}
     __device__ __host__ __forceinline__ Complex(const _Float &rhs) : real_(rhs), imag_(0) {}
 
     __device__ __host__ __forceinline__ _Float norm2() { return real_ * real_ + imag_ * imag_; }
@@ -24,9 +24,9 @@ class Complex {
     __device__ __host__ __forceinline__ _Float real() const { return real_; }
     __device__ __host__ __forceinline__ _Float imag() const { return imag_; }
 
-    // __device__ __host__ __forceinline__ Complex &operator=(const Complex &complex) {
-        // real_ = complex.real_;
-        // imag_ = complex.imag_;
+    // __device__ __host__ __forceinline__ Complex &operator=(const Complex &rhs) {
+        // real_ = rhs.real_;
+        // imag_ = rhs.imag_;
         // return *this;
     // }
     __device__ __host__ __forceinline__ Complex &operator=(_Float rhs) {
@@ -34,11 +34,11 @@ class Complex {
         imag_ = 0;
         return *this;
     }
-    __device__ __host__ __forceinline__ Complex operator+(const Complex &complex) const {
-        return Complex(real_ + complex.real_, imag_ + complex.imag_);
+    __device__ __host__ __forceinline__ Complex operator+(const Complex &rhs) const {
+        return Complex(real_ + rhs.real_, imag_ + rhs.imag_);
     }
-    __device__ __host__ __forceinline__ Complex operator-(const Complex &complex) const {
-        return Complex(real_ - complex.real_, imag_ - complex.imag_);
+    __device__ __host__ __forceinline__ Complex operator-(const Complex &rhs) const {
+        return Complex(real_ - rhs.real_, imag_ - rhs.imag_);
     }
     __device__ __host__ __forceinline__ Complex operator-() const { return Complex(-real_, -imag_); }
     __device__ __host__ __forceinline__ Complex operator*(const Complex &rhs) const {
