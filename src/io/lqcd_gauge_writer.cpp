@@ -1,92 +1,131 @@
-#include "lattice_desc.h"
-#include "lqcd_read_write.h"
-#include <cstdio>
-#include <complex>
-#include <sys/mman.h>
-#include <string>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "io/lqcd_read_write.h"
 #include <iostream>
-#include <cstring>
+#include <complex>
+#include <H5Cpp.h>
+#include <cassert>
+#include <exception>
 
-// 单进程实现
-template <typename _FloatType>
-void GaugeWriter<_FloatType>::write_gauge_kernel (std::complex<_FloatType>* disk_gauge, 
-                                                  std::complex<_FloatType>* memory_gauge) 
-{
-    auto gauge_length = header_.GaugeLength();
-    memcpy(disk_gauge, memory_gauge, gauge_length * sizeof(std::complex<_FloatType>));
-}
+namespace qcu::io {
+template <typename Real_>    
+void GaugeWriter<Real_>::write(std::string file_path, std::vector<int> dims, qcu::io::Gauge4Dim<std::complex<Real_>>& gauge) {
+    assert(mpi_desc_.data[T_DIM] > 0 && mpi_desc_.data[Z_DIM] > 0 && mpi_desc_.data[Y_DIM] > 0 && mpi_desc_.data[X_DIM] > 0);
+    try  {
+        H5::PredType storage_data_type = H5::PredType::NATIVE_DOUBLE;
+        if constexpr (std::is_same_v<Real_, double>) {
+            storage_data_type = H5::PredType::NATIVE_DOUBLE;
+        } else if constexpr (std::is_same_v<Real_, float>) {
+            storage_data_type = H5::PredType::NATIVE_FLOAT;
+        } else {
+            throw std::runtime_error("Unsupported data type, Only double and float are supported");
+        }
+        
+        // vector [Nd, Lt, Lz, Ly, Lx, Nc, Nc]
+        const size_t Nd = dims[0];
+        const size_t Lt = dims[1];
+        const size_t Lz = dims[2];
+        const size_t Ly = dims[3];
+        const size_t Lx = dims[4];
+        const size_t Nc = dims[5];
 
-template <typename _FloatType>
-GaugeWriter<_FloatType>::GaugeWriter(const std::string& file_path, 
-                                     const QcuHeader& header,
-                                     const MPI_Desc& mpi_desc,
-                                     const MPI_Coordinate& mpi_coord
-                                    ) 
-          : header_(header),
-            mpi_desc_(mpi_desc),
-            mpi_coord_(mpi_coord)
-{
-    auto gauge_num    = header_.m_Ngauge;
-    auto gauge_length = header_.GaugeLength();
+        // const int Nc_double = dims[6];
 
-    // 打开文件, 写文件头预先留出文件长度
-    LatticeIOHandler file_handler(file_path, LatticeIOHandler::QCU_READ_WRITE_CREATE_MODE);
-    file_handler = file_handler;
-    file_size_ = sizeof(QcuHeader) + (gauge_num * gauge_length) * sizeof (std::complex<_FloatType>);
-    
-    std::cout << "file_path = " << file_path << ", gauge file_size_ = " << file_size_ << std::endl;
-    int ret = ftruncate(file_handler.fd, file_size_);
-    if (ret == -1) {
-        perror("ftruncate");
+        const int local_lt = Lt / mpi_desc_.data[T_DIM];
+        const int local_lz = Lz / mpi_desc_.data[Z_DIM];
+        const int local_ly = Ly / mpi_desc_.data[Y_DIM];
+        const int local_lx = Lx / mpi_desc_.data[X_DIM];
+
+        const std::string dataset_name = "LatticeMatrix";
+
+        qcu::FourDimCoordinate mpi_coord;
+        
+        int remainder;
+        // T
+        mpi_coord.data[T_DIM] = mpi_rank_ / (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM] * mpi_desc_.data[Z_DIM]);
+        remainder = mpi_rank_ % (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM] * mpi_desc_.data[Z_DIM]); // t
+        
+        // Z
+        mpi_coord.data[Z_DIM] = remainder / (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM]);
+        remainder = remainder % (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM]); // z
+        
+        // Y
+        mpi_coord.data[Y_DIM] = remainder / mpi_desc_.data[X_DIM];
+        remainder = remainder % mpi_desc_.data[X_DIM]; // y
+        
+        // X
+        mpi_coord.data[X_DIM] = remainder; // x
+
+        qcu::FourDimCoordinate data_offset;
+        data_offset.data[T_DIM] = mpi_coord.data[T_DIM] * dims[1];
+        data_offset.data[Z_DIM] = mpi_coord.data[Z_DIM] * dims[2];
+        data_offset.data[Y_DIM] = mpi_coord.data[Y_DIM] * dims[3];
+        data_offset.data[X_DIM] = mpi_coord.data[X_DIM] * dims[4];
+
+        // parallel write file  
+        {
+            // set parallel access property
+            H5::FileAccPropList plist;
+            plist.copy(H5::FileAccPropList::DEFAULT);
+            H5Pset_fapl_mpio(plist.getId(), MPI_COMM_WORLD, MPI_INFO_NULL);
+
+            // create file
+            H5::H5File file(file_path, H5F_ACC_TRUNC, H5::FileCreatPropList::DEFAULT, plist);
+
+            // create global data space
+            std::vector<hsize_t> dims = { Nd, Lt, Lz, Ly, Lx, Nc, Nc * 2};
+            H5::DataSpace filespace(dims.size(), dims.data());
+
+            // create dataset
+            H5::DataSet dataset = file.createDataSet(dataset_name, storage_data_type, filespace);
+
+            // set local data space
+            std::vector<hsize_t> local_dims = { 
+                static_cast<hsize_t>(Nd), 
+                static_cast<hsize_t>(local_lt), 
+                static_cast<hsize_t>(local_lz), 
+                static_cast<hsize_t>(local_ly), 
+                static_cast<hsize_t>(local_lx), 
+                static_cast<hsize_t>(Nc), 
+                static_cast<hsize_t>(Nc * 2) 
+            };
+
+            std::vector<hsize_t> offset = { 
+                0, 
+                static_cast<hsize_t>(data_offset.data[T_DIM]), 
+                static_cast<hsize_t>(data_offset.data[Z_DIM]), 
+                static_cast<hsize_t>(data_offset.data[Y_DIM]), 
+                static_cast<hsize_t>(data_offset.data[X_DIM]), 
+                0, 
+                0 
+            };
+            
+            H5::DataSpace memspace(local_dims.size(), local_dims.data());
+            filespace.selectHyperslab(H5S_SELECT_SET, local_dims.data(), offset.data());
+
+            // set collective write property
+            H5::DSetMemXferPropList xfer_plist;
+            xfer_plist.copy(H5::DSetMemXferPropList::DEFAULT);
+            H5Pset_dxpl_mpio(xfer_plist.getId(), H5FD_MPIO_COLLECTIVE);
+
+            // write data
+            dataset.write(gauge.data_ptr(), storage_data_type, memspace, filespace, xfer_plist);
+        }
+    } catch (const H5::Exception& e) {
+        if (mpi_rank_ == 0) {
+            std::cerr << "HDF5 exception: Error," << e.getCDetailMsg() 
+                      << "in file " << __FILE__ << " at line " << __LINE__ << '\n';
+        }
+        MPI_Finalize();
+        exit(-1);
+    } catch (const std::exception& e) {
+        if (mpi_rank_ == 0) {
+            std::cerr << "Error: " << e.what() << 
+                      "in file " << __FILE__ << " at line " << __LINE__ << '\n';
+        }
+        MPI_Finalize();
+        exit(-1);
     }
-    ret = fsync(file_handler.fd);
-    if (ret == -1) {
-        perror("fsync");
-    }
-
-    disk_mapped_ptr_ = mmap(nullptr, file_size_, PROT_WRITE | PROT_READ, MAP_SHARED, file_handler.fd, 0);
-    if (disk_mapped_ptr_ == MAP_FAILED || disk_mapped_ptr_ == nullptr) {
-        throw std::runtime_error("GaugeWriter MMAP failed\n");
-    }
-
-    // 写文件头
-    memcpy(disk_mapped_ptr_, &header, sizeof(QcuHeader));
-}
-
-template <typename _FloatType>
-GaugeWriter<_FloatType>::~GaugeWriter() noexcept {
-    if (gauge_pos_ != header_.m_Ngauge) {
-        fprintf(stderr, "WARNING: gauge_pos != header_.m_Ngauge, in file %s, line %d\n", __FILE__, __LINE__);
-        fprintf(stderr, "gauge_pos = %d, header_.m_Ngauge = %d\n", gauge_pos_, header_.m_Ngauge);
-    }
-    if (disk_mapped_ptr_ != nullptr) {
-        if((msync((void*)disk_mapped_ptr_, file_size_, MS_SYNC)) == -1) { perror("msync");}
-        if((munmap((void *)disk_mapped_ptr_, file_size_)) == -1)        { perror("munmap\n");}
-    }
-}
-
-
-template <typename _FloatType>
-void GaugeWriter<_FloatType>::write_gauge (std::complex<_FloatType>* memory_gauge) 
-{
-    auto gauge_num    = header_.m_Ngauge;
-    auto gauge_length = header_.GaugeLength();
-
-    if (gauge_pos_ >= gauge_num) {
-        throw std::runtime_error("gauge_pos >= gauge_num");
-    }
-
-    // 定位起始写入位置
-    std::complex<_FloatType>* disk_gauge 
-            = reinterpret_cast<std::complex<_FloatType>*>(
-                static_cast<char *>(disk_mapped_ptr_) + sizeof(QcuHeader)
-              ) + gauge_pos_ * gauge_length;
-
-    write_gauge_kernel(disk_gauge, memory_gauge);
-    gauge_pos_++;
 }
 
 template class GaugeWriter<double>;
 template class GaugeWriter<float>;
+} // namespace qcu::io

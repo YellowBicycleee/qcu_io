@@ -1,29 +1,56 @@
 #pragma once 
 
+#include <memory>
+#include <vector>
+
 #include "lattice_desc.h"
 #include "qcu_public.h"
-#include "base/buffer.h"
-#include <memory>
 
-namespace qcu {
-class Gauge {
-public:
-    Gauge(const Gauge& rhs) : use_external_(true), precision_(rhs.precision_), 
-                            buffer_data_type_(rhs.buffer_data_type_),
-                            lattice_desc_(rhs.lattice_desc_),
-                            data_(rhs.data_) {}
-    // Gauge(  QCU_PRECISION qcu_precision,
-    //         BufferDataType buffer_data_type, 
-    //         const Latt_Desc& latt_desc, 
-    //         std::shared_ptr<base::DeviceAllocator> allocator
-    //       ) {}
+namespace qcu::io {
+
+template <typename T>
+class Gauge4Dim {
 private:
-    bool use_external_ = false;
-    QcuPrecision precision_ = QcuPrecision::kPrecisionUndefined;
-    // 描述数据的排布
-    BufferDataType buffer_data_type_;
-    Latt_Desc& lattice_desc_;    // 描述lattice的维度
-    std::shared_ptr<base::Buffer> data_;
+    constexpr static int Ndim = 4;  
+    std::vector<T> data;
+    size_t Lt, Lz, Ly, Lx, Nc;
+    
+    // 私有的索引计算方法
+    size_t index(size_t dim, size_t t, size_t z, size_t y, 
+                 size_t x, size_t c1, size_t c2) const {
+        return ((((((dim * Lt + t) * Lz + z) * Ly + y) * Lx + x) * Nc + c1) * Nc + c2);
+    }
+    
+public:
+    Gauge4Dim(size_t t_size, size_t z_size, size_t y_size, 
+            size_t x_size, size_t color_size) 
+        : Lt(t_size), Lz(z_size), Ly(y_size), Lx(x_size), Nc(color_size) {
+        data.resize(Ndim * Lt * Lz * Ly * Lx * Nc * Nc);
+    }
+    Gauge4Dim(const Gauge4Dim& other) = delete;
+    Gauge4Dim(Gauge4Dim&& other) = default;
+    Gauge4Dim& operator=(const Gauge4Dim& other) = delete;
+    Gauge4Dim& operator=(Gauge4Dim&& other) = default;
 
+    T& operator()(size_t dim, size_t t, size_t z, size_t y, 
+                  size_t x, size_t c1, size_t c2) {
+        return data[index(dim, t, z, y, x, c1, c2)];
+    }
+
+    const T& operator()(size_t dim, size_t t, size_t z, size_t y, 
+                       size_t x, size_t c1, size_t c2) const {
+        return data[index(dim, t, z, y, x, c1, c2)];
+    }
+
+    T* data_ptr() { return data.data(); }
+    const T* data_ptr() const { return data.data(); }
+    
+    size_t get_Lt() const { return Lt; }
+    size_t get_Lz() const { return Lz; }
+    size_t get_Ly() const { return Ly; }
+    size_t get_Lx() const { return Lx; }
+    size_t get_Nc() const { return Nc; }
+    static constexpr size_t get_Ndim() { return Ndim; }
 };
+
 }  // namespace qcu

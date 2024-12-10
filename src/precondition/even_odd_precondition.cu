@@ -8,30 +8,35 @@ namespace qcu {
 
 template <typename _Float>
 void EOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
-                                     Complex<_Float>* __restrict__ input, const Latt_Desc& desc,
-                                     int site_vec_len, [[maybe_unused]] int Nd, void* stream) {
-  int Lx = desc.data[X_DIM];
-  int Ly = desc.data[Y_DIM];
-  int Lz = desc.data[Z_DIM];
-  int Lt = desc.data[T_DIM];
+                                     Complex<_Float>* __restrict__ input, 
+                                     const qcu::FourDimDesc& latt_desc,
+                                     int site_vec_len, 
+                                     [[maybe_unused]] int Nd, 
+                                     void* stream) 
+{
+    int Lx = latt_desc.data[X_DIM];
+    int Ly = latt_desc.data[Y_DIM];
+    int Lz = latt_desc.data[Z_DIM];
+    int Lt = latt_desc.data[T_DIM];
 
-  int threads_per_block = 256;
-  int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
+    int threads_per_block = 256;
+    int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
 
-  kernel::eo_precondition_4D<_Float>
-      <<<blocks, threads_per_block, 0, static_cast<cudaStream_t>(stream)>>>(output, input, Lx, Ly,
-                                                                            Lz, Lt, site_vec_len);
-  CHECK_CUDA(cudaGetLastError());
-  CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
+    kernel::eo_precondition_4D<_Float>
+        <<<blocks, threads_per_block, 0, static_cast<cudaStream_t>(stream)>>>(output, input, Lx, Ly,
+                                                                                Lz, Lt, site_vec_len);
+    CHECK_CUDA(cudaGetLastError());
+    CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
 }
 template <typename _Float>
 void EOPreconditioner<_Float>::reverse(Complex<_Float>* __restrict__ output,
-                                       Complex<_Float>* __restrict__ input, const Latt_Desc& desc,
+                                       Complex<_Float>* __restrict__ input, 
+                                       const qcu::FourDimDesc& latt_desc,
                                        int site_vec_len, [[maybe_unused]] int Nd, void* stream) {
-  int Lx = desc.data[X_DIM];
-  int Ly = desc.data[Y_DIM];
-  int Lz = desc.data[Z_DIM];
-  int Lt = desc.data[T_DIM];
+  int Lx = latt_desc.data[X_DIM];
+  int Ly = latt_desc.data[Y_DIM];
+  int Lz = latt_desc.data[Z_DIM];
+  int Lt = latt_desc.data[T_DIM];
 
   int threads_per_block = 256;
   int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
@@ -46,12 +51,14 @@ void EOPreconditioner<_Float>::reverse(Complex<_Float>* __restrict__ output,
 template <typename _Float>
 void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
                                           Complex<_Float>* __restrict__ input,
-                                          const Latt_Desc& desc, int site_vec_len,
-                                          [[maybe_unused]] int Nd, void* stream) {
-  int Lx = desc.data[X_DIM];
-  int Ly = desc.data[Y_DIM];
-  int Lz = desc.data[Z_DIM];
-  int Lt = desc.data[T_DIM];
+                                          const qcu::FourDimDesc& latt_desc, 
+                                          int site_vec_len,
+                                          [[maybe_unused]] int Nd, 
+                                          void* stream) {
+  int Lx = latt_desc.data[X_DIM];
+  int Ly = latt_desc.data[Y_DIM];
+  int Lz = latt_desc.data[Z_DIM];
+  int Lt = latt_desc.data[T_DIM];
 
   int threads_per_block = 256;
   int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
@@ -69,12 +76,14 @@ void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
 template <typename _Float>
 void GaugeEOPreconditioner<_Float>::reverse(Complex<_Float>* __restrict__ output,
                                             Complex<_Float>* __restrict__ input,
-                                            const Latt_Desc& desc, int site_vec_len,
-                                            [[maybe_unused]] int Nd, void* stream) {
-  int Lx = desc.data[X_DIM];
-  int Ly = desc.data[Y_DIM];
-  int Lz = desc.data[Z_DIM];
-  int Lt = desc.data[T_DIM];
+                                            const qcu::FourDimDesc& latt_desc, 
+                                            int site_vec_len,
+                                            [[maybe_unused]] int Nd, 
+                                            void* stream) {
+  int Lx = latt_desc.data[X_DIM];
+  int Ly = latt_desc.data[Y_DIM];
+  int Lz = latt_desc.data[Z_DIM];
+  int Lt = latt_desc.data[T_DIM];
 
   int threads_per_block = 256;
   int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;

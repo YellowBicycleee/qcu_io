@@ -5,97 +5,121 @@
 #include <iostream>
 #include <vector>
 #include "lattice_desc.h"
-#include "lqcd_read_write.h"
+#include "io/lqcd_read_write.h"
 #include "qcu_parse_terminal.h"
 #include <cassert>
+#include <mpi.h>
+#include <H5Cpp.h>
 using namespace std;
 
 int main(int argc, char* argv[]) {
-  // int Ns = 4;
-  // int Nd = 4;
-  TerminalConfig config;
-  get_lattice_config(argc, argv, config);
-  config.detail();
+    MPI_Init(&argc, &argv);
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  assert(config.fermion_in_file_configured == 1 && config.gauge_in_file_configured == 1);
-  cout << "config.fermion_in_file = " << config.fermion_out_file << endl;
-  cout << "config.gauge_in_file = " << config.gauge_out_file << endl;
-  QcuHeader fermionConfig;
-  fermionConfig.m_data_format       = DataFormat::QUDA_FORMAT;
-  fermionConfig.m_storage_precision = QcuPrecision::kPrecisionDouble;
-  fermionConfig.m_mrhs_shuffled     = MrhsShuffled::MRHS_SHUFFLED_NO;
-  fermionConfig.m_storage_type      = StorageType::TYPE_FERMION;
-  fermionConfig.m_lattice_desc      = config.lattice_desc;
-  fermionConfig.m_Nc     = config.Nc;
-  fermionConfig.m_MInput = config.mInput;
-  fermionConfig.m_Ns     = Ns;
+    try {
+        constexpr int Lx_required = 4;
+        constexpr int Ly_required = 4;
+        constexpr int Lz_required = 4;
+        constexpr int Lt_required = 4;
+        constexpr int Nc_required = 3;
+        vector<int> dims = {4, Lt_required, Lz_required, Ly_required, Lx_required, Nc_required, Nc_required * 2};
 
-  QcuHeader gaugeConfig;
-  gaugeConfig.m_data_format       = DataFormat::QUDA_FORMAT;
-  gaugeConfig.m_storage_precision = QcuPrecision::kPrecisionDouble;
-  gaugeConfig.m_mrhs_shuffled     = MrhsShuffled::MRHS_SHUFFLED_NO;
-  gaugeConfig.m_storage_type      = StorageType::TYPE_GAUGE;
-  gaugeConfig.m_lattice_desc      = config.lattice_desc;
-  gaugeConfig.m_Nc     = config.Nc;
-  gaugeConfig.m_Ngauge = 1;
-  gaugeConfig.m_Nd     = Nd;
+        // 解析命令行参数 (x,y,z,t顺序)
+        if (argc != 2) {
+            if (rank == 0) {
+                std::cerr << "用法: mpirun -n <进程数> " << argv[0] << " Nx.Ny.Nz.Nt\n";
+            }
+            MPI_Finalize();
+            return 1;
+        }
+
+        // 解析进程网格
+        std::string grid_str(argv[1]);
+        int nx, ny, nz, nt;
+        size_t pos = 0;
+        nx = std::stoi(grid_str, &pos); grid_str = grid_str.substr(pos + 1);
+        ny = std::stoi(grid_str, &pos); grid_str = grid_str.substr(pos + 1);
+        nz = std::stoi(grid_str, &pos); grid_str = grid_str.substr(pos + 1);
+        nt = std::stoi(grid_str);
+
+        if (nx * ny * nz * nt != size) {
+            if (rank == 0) {
+                std::cerr << "错误：进程网格大小 (" << nx << "," << ny << "," 
+                         << nz << "," << nt << ") 与总进程数 " << size << " 不匹配\n";
+            }
+            MPI_Finalize();
+            return 1;
+        }
+
+        qcu::io::Gauge4Dim<std::complex<double>> gauge(0, 0, 0, 0, 0);
+
+        qcu::FourDimDesc mpi_desc(nx, ny, nz, nt);
+        qcu::io::GaugeReader<double> reader(0, mpi_desc);
+        reader.read("test_gauge.hdf5", dims, gauge);
+
+        int Nc = gauge.get_Nc();
+        int Lt = gauge.get_Lt();
+        int Lz = gauge.get_Lz();
+        int Ly = gauge.get_Ly();
+        int Lx = gauge.get_Lx();
+
+        int local_lt = Lt / nt;
+        int local_lz = Lz / nz;
+        int local_ly = Ly / ny;
+        int local_lx = Lx / nx;
+
+        if (rank == 0) {
+            std::cout << "Nc = " << Nc << ", Lt = " << Lt << ", Lz = " << Lz << ", Ly = " << Ly << ", Lx = " << Lx << std::endl;
+            std::cout << "local_lt = " << local_lt << ", local_lz = " << local_lz << ", local_ly = " << local_ly << ", local_lx = " << local_lx << std::endl;
+        }
 
 
-  auto mrhs_colorspinor_len = fermionConfig.MrhsColorSpinorLength();
-  auto gauge_len = gaugeConfig.GaugeLength();
+        // 按进程顺序输出每个进程的两个Nc * Nc矩阵
+        for (int current_rank = 0; current_rank < size; ++current_rank) {
+            if (rank == current_rank) {
+                std::cout << "\n进程 " << rank << " 的两个 Nc * Nc 矩阵:\n";
+                // 固定其他维度,输出两个color矩阵
+                const size_t t = 0, z = 0, y = 0, x = 0;
+                // 输出前两个维度
+                for (size_t dim = 0; dim < 2; ++dim) {
+                    std::cout << "维度 " << dim << ":\n";
+                    for (size_t c1 = 0; c1 < Nc; ++c1) {
+                        for (size_t c2 = 0; c2 < Nc; ++c2) {
+                            std::cout << gauge(dim, t, z, y, x, c1, c2) << "\t";
+                        }
+                        std::cout << "\n";
+                    }
+                    std::cout << "\n";
+                }
+                std::cout << std::flush;
 
-  // complex<double>* h_src_ptr;
-  complex<double>* h_dst_ptr;
-  complex<double>* h_gauge_ptr;
+                {
+                    std::cout << "last matrix " << ":\n";
+                    for (size_t c1 = 0; c1 < Nc; ++c1) {
+                        for (size_t c2 = 0; c2 < Nc; ++c2) {
+                            std::cout << gauge(3, local_lt - 1, local_lz - 1, local_ly - 1, local_lx - 1, c1, c2) << "\t";
+                        }
+                        std::cout << "\n";
+                    }
+                    std::cout << "\n";
+                }
+            }
+            MPI_Barrier(MPI_COMM_WORLD); // 确保按顺序输出
+        }
 
-  // h_src_ptr   = new complex<double>[mrhs_colorspinor_len];
-  h_dst_ptr   = new complex<double>[mrhs_colorspinor_len];
-  h_gauge_ptr = new complex<double>[gauge_len];
-
-  cout << "mrhs_colorspinor_len = " << mrhs_colorspinor_len << endl;
-  cout << "gauge_len = " << gauge_len << endl;
-
-  MPI_Coordinate coord;
-  Latt_Desc lattice_desc = config.lattice_desc;
-  GaugeReader<double> gaugeReader(config.gauge_in_file, 
-                                  gaugeConfig, 
-                                  config.mpi_desc, 
-                                  coord,
-                                  lattice_desc);
-  gaugeReader.read_gauge(h_gauge_ptr, 0);
-
-  FermionReader<double> fermionReader(config.fermion_in_file, 
-                                      fermionConfig, 
-                                      config.mpi_desc, 
-                                      coord);
-  fermionReader.read_fermion(h_dst_ptr, 0);
-
-  FILE* debugfile = fopen("file_input_data.txt", "w");
-  if (!debugfile) {
-    fprintf(stderr, "failed to open file file_output_data.txt\n");
-  }
-  fprintf(debugfile, "================== GAUGE: ======================\n");
-  for (int i = 0; i < gauge_len; ++i) {
-    fprintf(debugfile, "(%lf, %lf) ", h_gauge_ptr[i].real(), h_gauge_ptr[i].imag());
-    if (i != 0 && i % 5 == 0) {
-      fprintf(debugfile, "\n");
+    } catch (const H5::Exception& e) {
+        if (rank == 0) {
+            std::cerr << "HDF5错误：" << e.getCDetailMsg() << '\n';
+        }
+        MPI_Finalize();
+        return 1;
+    } catch (const std::exception& e) {
+        if (rank == 0) {
+            std::cerr << "错误：" << e.what() << '\n';
+        }
+        MPI_Finalize();
+        return 1;
     }
-  }
-
-  fprintf(debugfile, "\n==================fermion ===================\n");
-  for (int i = 0; i < mrhs_colorspinor_len; ++i) {
-    fprintf(debugfile, "(%lf, %lf) ", h_dst_ptr[i].real(), h_dst_ptr[i].imag());
-    if (i != 0 && i % 5 == 0) {
-      fprintf(debugfile, "\n");
-    }
-  }
-  fclose(debugfile);
-  cout << "mrhs_colorspinor_len = " << mrhs_colorspinor_len << endl;
-  cout << "gauge_len = " << gauge_len << endl;
-  std::cout << "sizeof(Config) = " << sizeof(QcuHeader) << std::endl;
-
-
-  // delete[] h_src_ptr;
-  delete[] h_dst_ptr;
-  delete[] h_gauge_ptr;
 }

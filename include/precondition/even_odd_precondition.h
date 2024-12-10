@@ -9,13 +9,13 @@ class EOPreconditioner {
  public:
   virtual void apply (  Complex<_Float>* __restrict__ output, 
                         Complex<_Float>* __restrict__ input, 
-                        const Latt_Desc& desc,
+                        const qcu::FourDimDesc& desc,
                         int site_vec_len, 
                         [[maybe_unused]] int Nd = 4, 
                         void* stream = nullptr);
   virtual void reverse( Complex<_Float>* __restrict__ output, 
                         Complex<_Float>* __restrict__ input, 
-                        const Latt_Desc& desc,
+                        const qcu::FourDimDesc& desc,
                         int site_vec_len,
                         [[maybe_unused]]int Nd = 4,
                         void* stream = nullptr);
@@ -26,13 +26,13 @@ class GaugeEOPreconditioner : public EOPreconditioner<_Float> {
  public:
   void apply(   Complex<_Float>* __restrict__ output, 
                 Complex<_Float>* __restrict__ input, 
-                const Latt_Desc& desc, 
+                const qcu::FourDimDesc& desc, 
                 int site_vec_len,
                 [[maybe_unused]] int Nd = 4, 
                 void* stream = nullptr) override;
   void reverse( Complex<_Float>* __restrict__ output, 
                 Complex<_Float>* __restrict__ input, 
-                const Latt_Desc& desc,
+                const qcu::FourDimDesc& desc,
                 int site_vec_len, 
                 [[maybe_unused]] int Nd = 4, 
                 void* stream = nullptr) override;
