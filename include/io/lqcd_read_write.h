@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <complex>
 #include "lattice_desc.h"
-#include "qcu_mpi_desc.h"
 #include "qcd/gauge.h"
 #include <string>
 #include <vector>

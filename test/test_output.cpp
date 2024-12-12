@@ -72,20 +72,6 @@ int main(int argc, char* argv[]) {
         const size_t local_ly = Ly / ny;
         const size_t local_lx = Lx / nx;
 
-        // // 计算当前进程在4D网格中的位置
-        // Coords coords;
-        // int remainder;
-        // coords.data[T_DIM] = rank / (nx * ny * nz);   remainder = rank % (nx * ny * nz); // t
-        // coords.data[Z_DIM] = remainder / (nx * ny);   remainder = remainder % (nx * ny); // z
-        // coords.data[Y_DIM] = remainder / nx;          remainder = remainder % nx; // y
-        // coords.data[X_DIM] = remainder;          // x
-
-        // // 计算局部数组在全局数组中的偏移
-        // const size_t offset_t = coords.T() * local_lt;
-        // const size_t offset_z = coords.Z() * local_lz;
-        // const size_t offset_y = coords.Y() * local_ly;
-        // const size_t offset_x = coords.X() * local_lx;
-
         // 创建局部数组
         qcu::io::Gauge4Dim<std::complex<double>> local_gauge(local_lt, local_lz, local_ly, local_lx, Nc);
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "qcu_public.h"
-#include "qcu_mpi_desc.h"
 
 #include <cstdint>
 #include <string>
@@ -15,9 +14,8 @@ struct FourDimDesc {
     int32_t data[MAX_DIM];  // X_DIM = 0, Y_DIM = 1, Z_DIM = 2, T_DIM = 3
 
     FourDimDesc() : data{0, 0, 0, 0} {}
-    FourDimDesc(int32_t x, int32_t y, int32_t z, int32_t t) : data{x, y, z, t} {
-        // printf("x = %d, y = %d, z = %d, t = %d\n", x, y, z, t);
-    }
+    FourDimDesc(int32_t x, int32_t y, int32_t z, int32_t t) : data{x, y, z, t} {}
+
     bool operator== (const FourDimDesc& rhs) {
         #pragma unroll
         for (int32_t i = 0; i < MAX_DIM; ++i) {

@@ -1,5 +1,4 @@
 #pragma once
-#include "qcu_mpi_desc.h"
 #include "lattice_desc.h"
 #include "io/lqcd_read_write.h"
 #include <string>
