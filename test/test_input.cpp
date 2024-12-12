@@ -109,6 +109,9 @@ int main(int argc, char* argv[]) {
             MPI_Barrier(MPI_COMM_WORLD); // 确保按顺序输出
         }
 
+        MPI_Finalize();
+        return 0;
+
     } catch (const H5::Exception& e) {
         if (rank == 0) {
             std::cerr << "HDF5错误：" << e.getCDetailMsg() << '\n';
