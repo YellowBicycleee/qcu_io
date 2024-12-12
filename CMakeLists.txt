@@ -21,11 +21,11 @@ set(HDF5_PREFER_PARALLEL TRUE)
 set(HDF5_USE_STATIC_LIBRARIES OFF)
 
 # set hdf5 root
-set(HDF5_ROOT "/usr/lib/x86_64-linux-gnu/hdf5/openmpi")
+# set(HDF5_ROOT "/usr/lib/x86_64-linux-gnu/hdf5/openmpi")
 # if use mpich, set hdf5 root
 # set(HDF5_ROOT "/usr/lib/x86_64-linux-gnu/hdf5/mpich")
 
-find_package(HDF5 COMPONENTS C CXX HL REQUIRED)
+find_package(HDF5 REQUIRED COMPONENTS C CXX HL)
 
 # verify hdf5 parallel
 if(HDF5_IS_PARALLEL)
@@ -66,16 +66,5 @@ target_include_directories(qcu_io_static
 target_link_libraries(qcu_io PUBLIC MPI::MPI_CXX ${HDF5_LIBRARIES})
 target_link_libraries(qcu_io_static PUBLIC MPI::MPI_CXX ${HDF5_LIBRARIES})
 
-# target_include_directories(qcu_io_static PUBLIC ${PROJECT_SOURCE_DIR}/include)
-# target_include_directories(qcu_io_static PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-
-
-# link mpi and hdf5
-# target_include_directories(qcu_io PUBLIC ${MPI_CXX_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
-# target_include_directories(qcu_io_static PUBLIC ${MPI_CXX_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
-
-# # 链接MPI库
-# target_link_libraries(qcu_io PUBLIC MPI::MPI_CXX ${HDF5_LIBRARIES})
-# target_link_libraries(qcu_io_static PUBLIC MPI::MPI_CXX ${HDF5_LIBRARIES})
 
 add_subdirectory(test)
