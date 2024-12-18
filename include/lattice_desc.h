@@ -9,16 +9,16 @@
 namespace qcu {
 
 struct FourDimDesc {
-    static constexpr int32_t MAX_DIM = 4;
+    static constexpr int32_t kMaxDim = 4;
 
-    int32_t data[MAX_DIM];  // X_DIM = 0, Y_DIM = 1, Z_DIM = 2, T_DIM = 3
+    int32_t data[kMaxDim];  // X_DIM = 0, Y_DIM = 1, Z_DIM = 2, T_DIM = 3
 
     FourDimDesc() : data{0, 0, 0, 0} {}
     FourDimDesc(int32_t x, int32_t y, int32_t z, int32_t t) : data{x, y, z, t} {}
 
     bool operator== (const FourDimDesc& rhs) {
         #pragma unroll
-        for (int32_t i = 0; i < MAX_DIM; ++i) {
+        for (int32_t i = 0; i < kMaxDim; ++i) {
             if (data[i] != rhs.data[i]) {
                 return false;
             }
@@ -35,15 +35,15 @@ struct FourDimDesc {
 
 
 struct FourDimCoordinate {
-    static constexpr int32_t MAX_DIM = 4;
-    int32_t data[MAX_DIM];  // X_DIM = 0, Y_DIM = 1, Z_DIM = 2, T_DIM = 3
+    static constexpr int32_t kMaxDim = 4;
+    int32_t data[kMaxDim];  // X_DIM = 0, Y_DIM = 1, Z_DIM = 2, T_DIM = 3
     
     FourDimCoordinate() : data{0, 0, 0, 0} {}
     FourDimCoordinate(int32_t x, int32_t y, int32_t z, int32_t t) : data{x, y, z, t} {}
     
     bool operator== (const FourDimCoordinate& rhs) {
         #pragma unroll
-        for (int32_t i = 0; i < MAX_DIM; ++i) {
+        for (int32_t i = 0; i < kMaxDim; ++i) {
             if (data[i] != rhs.data[i]) {
                 return false;
             }

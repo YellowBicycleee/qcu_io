@@ -4,7 +4,7 @@
 bool MPI_Desc::operator== (const MPI_Desc& rhs) {
     bool res = true;
     #pragma unroll
-    for (int i = 0; i < MAX_DIM; ++i) {
+    for (int i = 0; i < kMaxDim; ++i) {
         if (data[i] != rhs.data[i]) {
             res = false;
             break;
@@ -23,7 +23,7 @@ void MPI_Desc::detail () {
 bool MPI_Coordinate::operator== (const MPI_Coordinate& rhs) {
     bool res = true;
     #pragma unroll
-    for (int i = 0; i < MAX_DIM; ++i) {
+    for (int i = 0; i < kMaxDim; ++i) {
         if (data[i] != rhs.data[i]) {
             res = false;
             break;

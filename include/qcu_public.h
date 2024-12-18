@@ -99,10 +99,10 @@ enum BufferDataType {
     } while (0)
 
 
-constexpr int MAX_DIM = 4;
-constexpr int WARP_SIZE = 32;
-constexpr int WARP_PER_BLOCK = 4;
-constexpr int MAX_THREADS_PER_BLOCK = 1024;
+constexpr int kMaxDim = 4;
+constexpr int kWarpSize = 32;
+constexpr int kWarpPerBlock = 4;
+constexpr int kMaxThreadsPerBlock = 1024;
 
 #define IDX2D(y, x, lx) ((y) * (lx) + (x))
 #define IDX3D(z, y, x, ly, lx) ((((z) * (ly)) + (y)) * (lx) + (x))
