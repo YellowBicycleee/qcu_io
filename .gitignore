@@ -3,3 +3,5 @@ settings.json
 test.cpp
 tasks.json
 .vscode
+compile_commands.json
+.cache
