@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.18)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-enable_language(CUDA C CXX)
 set(CMAKE_CUDA_ARCHITECTURES 89)    # for 4060 laptop
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
 
+enable_language(CUDA C CXX)
 
 project(QCU_IO LANGUAGES C CXX CUDA)
 
@@ -64,7 +64,7 @@ target_include_directories(qcu_io_static
     PUBLIC ${HDF5_INCLUDE_DIRS})
 
 target_link_libraries(qcu_io PUBLIC MPI::MPI_CXX ${HDF5_LIBRARIES})
-target_link_libraries(qcu_io_static PUBLIC MPI::MPI_CXX ${HDF5_LIBRARIES})
+target_link_libraries(qcu_io_static PUBLIC STATIC MPI::MPI_CXX ${HDF5_LIBRARIES})
 
 
 add_subdirectory(test)
