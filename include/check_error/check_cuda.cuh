@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdio>
-#define DEBUG
-#ifdef DEBUG
+#define PROFILE 
+#ifdef PROFILE
 
 #define CHECK_CUDA(ans) do { cudaAssert((ans), __FILE__, __LINE__); } while (0) 
 
