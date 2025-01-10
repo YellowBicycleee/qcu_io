@@ -62,6 +62,13 @@ struct FourDimCoordinate {
                data[Y_DIM] * dim_desc.data[X_DIM] + 
                data[X_DIM];
     }
+    int32_t getReversedIdx1D (const FourDimDesc& dim_desc) {
+        return 
+            data[X_DIM] * dim_desc.data[Y_DIM] * dim_desc.data[Z_DIM] * dim_desc.data[T_DIM] + 
+            data[Y_DIM] * dim_desc.data[Z_DIM] * dim_desc.data[T_DIM] + 
+            data[Z_DIM] * dim_desc.data[T_DIM] + 
+            data[T_DIM];
+    }
 };
 
 };
