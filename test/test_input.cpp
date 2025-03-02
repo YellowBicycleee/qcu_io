@@ -10,6 +10,7 @@
 #include <cassert>
 #include <mpi.h>
 #include <H5Cpp.h>
+#include <numeric>
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -24,8 +25,9 @@ int main(int argc, char* argv[]) {
         constexpr int Lz_required = 4;
         constexpr int Lt_required = 4;
         constexpr int Nc_required = 3;
-        vector<int> dims = {4, Lt_required, Lz_required, Ly_required, Lx_required, Nc_required, Nc_required * 2};
 
+        std::vector<int> global_lattice_desc = {Lx_required, Ly_required, Lz_required, Lt_required};
+        
         // 解析命令行参数 (x,y,z,t顺序)
         if (argc != 2) {
             if (rank == 0) {
@@ -37,38 +39,41 @@ int main(int argc, char* argv[]) {
 
         // 解析进程网格
         std::string grid_str(argv[1]);
-        int nx, ny, nz, nt;
-        size_t pos = 0;
-        nx = std::stoi(grid_str, &pos); grid_str = grid_str.substr(pos + 1);
-        ny = std::stoi(grid_str, &pos); grid_str = grid_str.substr(pos + 1);
-        nz = std::stoi(grid_str, &pos); grid_str = grid_str.substr(pos + 1);
-        nt = std::stoi(grid_str);
+        std::istringstream iss(grid_str);
+        std::vector<int> mpi_desc;
+        
+        while (getline(iss, grid_str, '.')) {
+            mpi_desc.push_back(std::stoi(grid_str));
+        }
+        assert(mpi_desc.size() == global_lattice_desc.size());
 
-        if (nx * ny * nz * nt != size) {
+        if (std::accumulate(mpi_desc.begin(), mpi_desc.end(), 1, std::multiplies<int>()) != size) {
             if (rank == 0) {
-                std::cerr << "错误：进程网格大小 (" << nx << "," << ny << "," 
-                         << nz << "," << nt << ") 与总进程数 " << size << " 不匹配\n";
+                std::cerr << "错误：进程网格大小 (" << std::endl;
+                for (int i = 0; i < mpi_desc.size() - 1; ++i) {
+                    std::cerr << mpi_desc[i] << ",";
+                }
+                std::cerr << mpi_desc[mpi_desc.size() - 1] << ") 与总进程数 " << size << " 不匹配\n";
             }
             MPI_Finalize();
             return 1;
         }
 
-        qcu::io::Gauge4Dim<std::complex<double>> gauge(0, 0, 0, 0, 0);
+        qcu::io::GaugeStorage<std::complex<double>> gauge(global_lattice_desc, Nc_required);
 
-        qcu::FourDimDesc mpi_desc(nx, ny, nz, nt);
-        qcu::io::GaugeReader<double> reader(0, mpi_desc);
-        reader.read("test_gauge.hdf5", dims, gauge);
+        qcu::io::GaugeReader<double> reader(rank, mpi_desc);
+        reader.read("test_gauge.hdf5", gauge);
 
-        int Nc = gauge.get_Nc();
-        int Lt = gauge.get_Lt();
-        int Lz = gauge.get_Lz();
-        int Ly = gauge.get_Ly();
-        int Lx = gauge.get_Lx();
+        int Nc = gauge.get_n_color();
+        int Lt = gauge.get_global_lattice_desc()[T_DIM];
+        int Lz = gauge.get_global_lattice_desc()[Z_DIM];
+        int Ly = gauge.get_global_lattice_desc()[Y_DIM];
+        int Lx = gauge.get_global_lattice_desc()[X_DIM];
 
-        int local_lt = Lt / nt;
-        int local_lz = Lz / nz;
-        int local_ly = Ly / ny;
-        int local_lx = Lx / nx;
+        int local_lt = Lt / mpi_desc[T_DIM];
+        int local_lz = Lz / mpi_desc[Z_DIM];
+        int local_ly = Ly / mpi_desc[Y_DIM];
+        int local_lx = Lx / mpi_desc[X_DIM];
 
         if (rank == 0) {
             std::cout << "Nc = " << Nc << ", Lt = " << Lt << ", Lz = " << Lz << ", Ly = " << Ly << ", Lx = " << Lx << std::endl;
@@ -78,16 +83,20 @@ int main(int argc, char* argv[]) {
 
         // 按进程顺序输出每个进程的两个Nc * Nc矩阵
         for (int current_rank = 0; current_rank < size; ++current_rank) {
-            if (rank == current_rank) {
+            if (rank == current_rank && global_lattice_desc.size() == 4) {
                 std::cout << "\n进程 " << rank << " 的两个 Nc * Nc 矩阵:\n";
                 // 固定其他维度,输出两个color矩阵
-                const size_t t = 0, z = 0, y = 0, x = 0;
+                const int t = 0, z = 0, y = 0, x = 0;
+                const int vol = Lx * Ly * Lz * Lt;
+                int one_dim_index = ((t * Lz + z) * Ly + y) * Lx + x;
+                std::cout << "one_dim_index = " << one_dim_index << std::endl;
+                std::complex<double> *data_ptr = gauge.data_ptr();
                 // 输出前两个维度
                 for (size_t dim = 0; dim < 2; ++dim) {
                     std::cout << "维度 " << dim << ":\n";
                     for (size_t c1 = 0; c1 < Nc; ++c1) {
                         for (size_t c2 = 0; c2 < Nc; ++c2) {
-                            std::cout << gauge(dim, t, z, y, x, c1, c2) << "\t";
+                            std::cout << data_ptr[(dim * vol + one_dim_index) * Nc * Nc + c1 * Nc + c2] << "\t";
                         }
                         std::cout << "\n";
                     }
@@ -96,10 +105,16 @@ int main(int argc, char* argv[]) {
                 std::cout << std::flush;
 
                 {
+                    int t = local_lt - 1;
+                    int z = local_lz - 1;
+                    int y = local_ly - 1;
+                    int x = local_lx - 1;
+                    int one_dim_index = ((t * Lz + z) * Ly + y) * Lx + x;
+
                     std::cout << "last matrix " << ":\n";
                     for (size_t c1 = 0; c1 < Nc; ++c1) {
                         for (size_t c2 = 0; c2 < Nc; ++c2) {
-                            std::cout << gauge(3, local_lt - 1, local_lz - 1, local_ly - 1, local_lx - 1, c1, c2) << "\t";
+                            std::cout << data_ptr[(3 * vol + one_dim_index) * Nc * Nc + c1 * Nc + c2] << "\t";
                         }
                         std::cout << "\n";
                     }

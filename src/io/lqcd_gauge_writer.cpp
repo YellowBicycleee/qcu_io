@@ -1,67 +1,63 @@
 #include "io/lqcd_read_write.h"
+#include <cstddef>
 #include <iostream>
 #include <complex>
 #include <H5Cpp.h>
 #include <cassert>
 #include <exception>
-
+#include <type_traits>
+#include <vector>
+#include <complex>
 namespace qcu::io {
 template <typename Real_>    
-void GaugeWriter<Real_>::write(std::string file_path, std::vector<int> dims, qcu::io::Gauge4Dim<std::complex<Real_>>& gauge) {
-    assert(mpi_desc_.data[T_DIM] > 0 && mpi_desc_.data[Z_DIM] > 0 && mpi_desc_.data[Y_DIM] > 0 && mpi_desc_.data[X_DIM] > 0);
+void GaugeWriter<Real_>::write(std::string file_path, qcu::io::GaugeStorage<std::complex<Real_>>& gauge_out) {
+    int num_dims = mpi_desc_.size();
+    int gauge_dims = gauge_out.get_dim_num();
+    assert(num_dims == gauge_dims);
+    for (int i = 0; i < num_dims; ++i) {
+        assert(mpi_desc_[i] > 0);
+    }
+    
     try  {
-        H5::PredType storage_data_type = H5::PredType::NATIVE_DOUBLE;
-        if constexpr (std::is_same_v<Real_, double>) {
-            storage_data_type = H5::PredType::NATIVE_DOUBLE;
+        hid_t complex_id = H5Tcreate (H5T_COMPOUND, 2 * sizeof(Real_));
+        if constexpr (std::is_same_v<Real_, double>) {  
+            H5Tinsert (complex_id, "r", 0, H5T_NATIVE_DOUBLE);
+            H5Tinsert (complex_id, "i", sizeof(Real_), H5T_NATIVE_DOUBLE);
         } else if constexpr (std::is_same_v<Real_, float>) {
-            storage_data_type = H5::PredType::NATIVE_FLOAT;
+            H5Tinsert (complex_id, "r", 0, H5T_NATIVE_FLOAT);
+            H5Tinsert (complex_id, "i", sizeof(Real_), H5T_NATIVE_FLOAT);
         } else {
             throw std::runtime_error("Unsupported data type, Only double and float are supported");
         }
         
-        // vector [Nd, Lt, Lz, Ly, Lx, Nc, Nc]
-        const size_t Nd = dims[0];
-        const size_t Lt = dims[1];
-        const size_t Lz = dims[2];
-        const size_t Ly = dims[3];
-        const size_t Lx = dims[4];
-        const size_t Nc = dims[5];
+        // vector [Nd, dims, Nc, Nc]
+        const size_t Nd = num_dims;
+        const size_t Nc = gauge_out.get_n_color();
 
         // const int Nc_double = dims[6];
-
-        const int local_lt = Lt / mpi_desc_.data[T_DIM];
-        const int local_lz = Lz / mpi_desc_.data[Z_DIM];
-        const int local_ly = Ly / mpi_desc_.data[Y_DIM];
-        const int local_lx = Lx / mpi_desc_.data[X_DIM];
+        std::vector<int> lattice_total_dims = gauge_out.get_global_lattice_desc();
+        std::vector<int> lattice_local_dims(num_dims, 0);
+        for (int i = 0; i < num_dims; ++i) {
+            lattice_local_dims[i] = lattice_total_dims[i] / mpi_desc_[i];
+        }
 
         const std::string dataset_name = "LatticeMatrix";
 
-        qcu::FourDimCoordinate mpi_coord;
-        
-        int remainder;
-        // T
-        mpi_coord.data[T_DIM] = mpi_rank_ / (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM] * mpi_desc_.data[Z_DIM]);
-        remainder = mpi_rank_ % (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM] * mpi_desc_.data[Z_DIM]); // t
-        
-        // Z
-        mpi_coord.data[Z_DIM] = remainder / (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM]);
-        remainder = remainder % (mpi_desc_.data[X_DIM] * mpi_desc_.data[Y_DIM]); // z
-        
-        // Y
-        mpi_coord.data[Y_DIM] = remainder / mpi_desc_.data[X_DIM];
-        remainder = remainder % mpi_desc_.data[X_DIM]; // y
-        
-        // X
-        mpi_coord.data[X_DIM] = remainder; // x
+        // qcu::FourDimCoordinate mpi_coord;
+        std::vector<int> mpi_coord(num_dims, 0);
+        int remainder = mpi_rank_;
+        for (int i = num_dims - 1; i >= 0; --i) {
+            mpi_coord[i] = remainder % mpi_desc_[i];
+            remainder = remainder / mpi_desc_[i];
+        }
 
-        qcu::FourDimCoordinate data_offset;
-        data_offset.data[T_DIM] = mpi_coord.data[T_DIM] * dims[1];
-        data_offset.data[Z_DIM] = mpi_coord.data[Z_DIM] * dims[2];
-        data_offset.data[Y_DIM] = mpi_coord.data[Y_DIM] * dims[3];
-        data_offset.data[X_DIM] = mpi_coord.data[X_DIM] * dims[4];
+        std::vector<int> data_offset(num_dims, 0);
+        for (int i = 0; i < num_dims; ++i) {
+            data_offset[i] = mpi_coord[i] * lattice_local_dims[i];
+        }
 
         // parallel write file  
-        {
+        {            
             // set parallel access property
             H5::FileAccPropList plist;
             plist.copy(H5::FileAccPropList::DEFAULT);
@@ -71,32 +67,34 @@ void GaugeWriter<Real_>::write(std::string file_path, std::vector<int> dims, qcu
             H5::H5File file(file_path, H5F_ACC_TRUNC, H5::FileCreatPropList::DEFAULT, plist);
 
             // create global data space
-            std::vector<hsize_t> dims = { Nd, Lt, Lz, Ly, Lx, Nc, Nc * 2};
+            std::vector<hsize_t> dims; //  = { Nd, Lt, Lz, Ly, Lx, Nc, Nc * 2};
+            dims.push_back(Nd);
+            for (int i = 0; i < num_dims; ++i) {
+                dims.push_back(lattice_total_dims[i]);
+            }
+            dims.push_back(Nc);
+            dims.push_back(Nc);
             H5::DataSpace filespace(dims.size(), dims.data());
 
             // create dataset
-            H5::DataSet dataset = file.createDataSet(dataset_name, storage_data_type, filespace);
+            H5::DataSet dataset = file.createDataSet(dataset_name, complex_id, filespace);
 
             // set local data space
-            std::vector<hsize_t> local_dims = { 
-                static_cast<hsize_t>(Nd), 
-                static_cast<hsize_t>(local_lt), 
-                static_cast<hsize_t>(local_lz), 
-                static_cast<hsize_t>(local_ly), 
-                static_cast<hsize_t>(local_lx), 
-                static_cast<hsize_t>(Nc), 
-                static_cast<hsize_t>(Nc * 2) 
-            };
+            std::vector<hsize_t> local_dims;
+            local_dims.push_back(Nd);
+            for (int i = 0; i < num_dims; ++i) {
+                local_dims.push_back(lattice_local_dims[i]);
+            }
+            local_dims.push_back(Nc);
+            local_dims.push_back(Nc);
 
-            std::vector<hsize_t> offset = { 
-                0, 
-                static_cast<hsize_t>(data_offset.data[T_DIM]), 
-                static_cast<hsize_t>(data_offset.data[Z_DIM]), 
-                static_cast<hsize_t>(data_offset.data[Y_DIM]), 
-                static_cast<hsize_t>(data_offset.data[X_DIM]), 
-                0, 
-                0 
-            };
+            std::vector<hsize_t> offset;
+            offset.push_back(0);
+            for (int i = 0; i < num_dims; ++i) {
+                offset.push_back(data_offset[i]);
+            }
+            offset.push_back(0);
+            offset.push_back(0);
             
             H5::DataSpace memspace(local_dims.size(), local_dims.data());
             filespace.selectHyperslab(H5S_SELECT_SET, local_dims.data(), offset.data());
@@ -107,19 +105,19 @@ void GaugeWriter<Real_>::write(std::string file_path, std::vector<int> dims, qcu
             H5Pset_dxpl_mpio(xfer_plist.getId(), H5FD_MPIO_COLLECTIVE);
 
             // write data
-            dataset.write(gauge.data_ptr(), storage_data_type, memspace, filespace, xfer_plist);
+            dataset.write(gauge_out.data_ptr(), complex_id, memspace, filespace, xfer_plist);
         }
     } catch (const H5::Exception& e) {
         if (mpi_rank_ == 0) {
             std::cerr << "HDF5 exception: Error," << e.getCDetailMsg() 
-                      << "in file " << __FILE__ << " at line " << __LINE__ << '\n';
+                << "in file " << __FILE__ << " at line " << __LINE__ << '\n';
         }
         MPI_Finalize();
         exit(-1);
     } catch (const std::exception& e) {
         if (mpi_rank_ == 0) {
             std::cerr << "Error: " << e.what() << 
-                      "in file " << __FILE__ << " at line " << __LINE__ << '\n';
+                "in file " << __FILE__ << " at line " << __LINE__ << '\n';
         }
         MPI_Finalize();
         exit(-1);
