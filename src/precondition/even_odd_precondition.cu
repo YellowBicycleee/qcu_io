@@ -3,21 +3,28 @@
 #include "kernel/precondition/eo_precondition.cuh"
 #include "lattice_desc.h"
 #include "precondition/even_odd_precondition.h"
-
+#include <cassert>
 namespace qcu {
 
 template <typename _Float>
 void EOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
                                      Complex<_Float>* __restrict__ input, 
-                                     const qcu::FourDimDesc& latt_desc,
+                                     const std::vector<int>& local_lattice_desc,
                                      int site_vec_len, 
                                      [[maybe_unused]] int Nd, 
                                      void* stream) 
 {
-    int Lx = latt_desc.data[X_DIM];
-    int Ly = latt_desc.data[Y_DIM];
-    int Lz = latt_desc.data[Z_DIM];
-    int Lt = latt_desc.data[T_DIM];
+    assert(local_lattice_desc.size() <= 4);
+    int Lx = 1;
+    int Ly = 1;
+    int Lz = 1;
+    int Lt = 1;
+    for (int i = 0; i < local_lattice_desc.size(); ++i) {
+        if (i == X_DIM) Lx = local_lattice_desc[i];
+        if (i == Y_DIM) Ly = local_lattice_desc[i];
+        if (i == Z_DIM) Lz = local_lattice_desc[i];
+        if (i == T_DIM) Lt = local_lattice_desc[i];
+    }
 
     int threads_per_block = 256;
     int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
@@ -31,34 +38,50 @@ void EOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
 template <typename _Float>
 void EOPreconditioner<_Float>::reverse(Complex<_Float>* __restrict__ output,
                                        Complex<_Float>* __restrict__ input, 
-                                       const qcu::FourDimDesc& latt_desc,
-                                       int site_vec_len, [[maybe_unused]] int Nd, void* stream) {
-  int Lx = latt_desc.data[X_DIM];
-  int Ly = latt_desc.data[Y_DIM];
-  int Lz = latt_desc.data[Z_DIM];
-  int Lt = latt_desc.data[T_DIM];
+                                       const std::vector<int>& local_lattice_desc,
+                                       int site_vec_len, [[maybe_unused]] int Nd, void* stream) 
+{
+    assert(local_lattice_desc.size() <= 4);
+    int Lx = 1;
+    int Ly = 1;
+    int Lz = 1;
+    int Lt = 1;
+    for (int i = 0; i < local_lattice_desc.size(); ++i) {
+        if (i == X_DIM) Lx = local_lattice_desc[i];
+        if (i == Y_DIM) Ly = local_lattice_desc[i];
+        if (i == Z_DIM) Lz = local_lattice_desc[i];
+        if (i == T_DIM) Lt = local_lattice_desc[i];
+    }
 
-  int threads_per_block = 256;
-  int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
+    int threads_per_block = 256;
+    int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
 
-  kernel::reverse_eo_precondition_4D<_Float>
-      <<<blocks, threads_per_block, 0, static_cast<cudaStream_t>(stream)>>>(output, input, Lx, Ly,
-                                                                            Lz, Lt, site_vec_len);
-  CHECK_CUDA(cudaGetLastError());
-  CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
+    kernel::reverse_eo_precondition_4D<_Float>
+        <<<blocks, threads_per_block, 0, static_cast<cudaStream_t>(stream)>>>(output, input, Lx, Ly,
+                                                                                Lz, Lt, site_vec_len);
+    CHECK_CUDA(cudaGetLastError());
+    CHECK_CUDA(cudaStreamSynchronize(static_cast<cudaStream_t>(stream)));
 }
 
 template <typename _Float>
 void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
                                           Complex<_Float>* __restrict__ input,
-                                          const qcu::FourDimDesc& latt_desc, 
+                                          const std::vector<int>& local_lattice_desc, 
                                           int site_vec_len,
                                           [[maybe_unused]] int Nd, 
-                                          void* stream) {
-  int Lx = latt_desc.data[X_DIM];
-  int Ly = latt_desc.data[Y_DIM];
-  int Lz = latt_desc.data[Z_DIM];
-  int Lt = latt_desc.data[T_DIM];
+                                          void* stream) 
+{
+    assert(local_lattice_desc.size() <= 4);
+    int Lx = 1;
+    int Ly = 1;
+    int Lz = 1;
+    int Lt = 1;
+    for (int i = 0; i < local_lattice_desc.size(); ++i) {
+        if (i == X_DIM) Lx = local_lattice_desc[i];
+        if (i == Y_DIM) Ly = local_lattice_desc[i];
+        if (i == Z_DIM) Lz = local_lattice_desc[i];
+        if (i == T_DIM) Lt = local_lattice_desc[i];
+    }
 
   int threads_per_block = 256;
   int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;
@@ -76,14 +99,21 @@ void GaugeEOPreconditioner<_Float>::apply(Complex<_Float>* __restrict__ output,
 template <typename _Float>
 void GaugeEOPreconditioner<_Float>::reverse(Complex<_Float>* __restrict__ output,
                                             Complex<_Float>* __restrict__ input,
-                                            const qcu::FourDimDesc& latt_desc, 
+                                            const std::vector<int>& local_lattice_desc, 
                                             int site_vec_len,
                                             [[maybe_unused]] int Nd, 
                                             void* stream) {
-  int Lx = latt_desc.data[X_DIM];
-  int Ly = latt_desc.data[Y_DIM];
-  int Lz = latt_desc.data[Z_DIM];
-  int Lt = latt_desc.data[T_DIM];
+    assert(local_lattice_desc.size() <= 4);
+    int Lx = 1;
+    int Ly = 1;
+    int Lz = 1;
+    int Lt = 1;
+    for (int i = 0; i < local_lattice_desc.size(); ++i) {
+        if (i == X_DIM) Lx = local_lattice_desc[i];
+        if (i == Y_DIM) Ly = local_lattice_desc[i];
+        if (i == Z_DIM) Lz = local_lattice_desc[i];
+        if (i == T_DIM) Lt = local_lattice_desc[i];
+    }
 
   int threads_per_block = 256;
   int blocks = (Lx * Ly * Lz * Lt + threads_per_block - 1) / threads_per_block;

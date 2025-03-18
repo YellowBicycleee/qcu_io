@@ -1,6 +1,7 @@
 #pragma once
 #include "base/datatype/qcu_complex.cuh"
 #include "lattice_desc.h"
+#include <vector>
 namespace qcu {
 
 // clang-format off
@@ -9,13 +10,13 @@ class EOPreconditioner {
  public:
   virtual void apply (  Complex<_Float>* __restrict__ output, 
                         Complex<_Float>* __restrict__ input, 
-                        const qcu::FourDimDesc& desc,
+                        const std::vector<int>& local_lattice_desc,
                         int site_vec_len, 
                         [[maybe_unused]] int Nd = 4, 
                         void* stream = nullptr);
   virtual void reverse( Complex<_Float>* __restrict__ output, 
                         Complex<_Float>* __restrict__ input, 
-                        const qcu::FourDimDesc& desc,
+                        const std::vector<int>& local_lattice_desc,
                         int site_vec_len,
                         [[maybe_unused]]int Nd = 4,
                         void* stream = nullptr);
@@ -26,13 +27,13 @@ class GaugeEOPreconditioner : public EOPreconditioner<_Float> {
  public:
   void apply(   Complex<_Float>* __restrict__ output, 
                 Complex<_Float>* __restrict__ input, 
-                const qcu::FourDimDesc& desc, 
+                const std::vector<int>& local_lattice_desc, 
                 int site_vec_len,
                 [[maybe_unused]] int Nd = 4, 
                 void* stream = nullptr) override;
   void reverse( Complex<_Float>* __restrict__ output, 
                 Complex<_Float>* __restrict__ input, 
-                const qcu::FourDimDesc& desc,
+                const std::vector<int>& local_lattice_desc,
                 int site_vec_len, 
                 [[maybe_unused]] int Nd = 4, 
                 void* stream = nullptr) override;
