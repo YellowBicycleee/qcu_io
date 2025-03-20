@@ -27,10 +27,14 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     try {
-        constexpr int Lx_required = 4;
-        constexpr int Ly_required = 4;
-        constexpr int Lz_required = 4;
-        constexpr int Lt_required = 4;
+        // constexpr int Lx_required = 4;
+        // constexpr int Ly_required = 4;
+        // constexpr int Lz_required = 4;
+        // constexpr int Lt_required = 4;
+        constexpr int Lx_required = 2;
+        constexpr int Ly_required = 2;
+        constexpr int Lz_required = 2;
+        constexpr int Lt_required = 2;
         constexpr int Nc_required = 3;
         const int Nc = Nc_required;
 
@@ -91,7 +95,7 @@ int main(int argc, char* argv[]) {
 
         // 初始化局部数据
         constexpr int MAX_ELEM = 9 * 32;
-        int counter = 0;
+        // int counter = 0;
 
         // 初始化数据
         std::complex<double>* data_ptr = gauge.data_ptr();
@@ -108,8 +112,9 @@ int main(int argc, char* argv[]) {
                                         + z * local_ly * local_lx 
                                         + y * local_lx 
                                         + x;
-                                    double temp = rank * 1000 + static_cast<double>(counter++);
-                                    counter = counter % MAX_ELEM;
+                                    double temp = rank * 10000 + one_dim_index * Nc * Nc + c1 * Nc + c2;
+                                    // double temp = rank * 10000 + static_cast<double>(counter++);
+                                    // counter = counter % MAX_ELEM;
                                     data_ptr[one_dim_index * Nc * Nc + c1 * Nc + c2] = {temp, temp + 0.1};
                                 }
                             }

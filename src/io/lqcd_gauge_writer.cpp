@@ -69,8 +69,8 @@ void GaugeWriter<Real_>::write(std::string file_path, qcu::io::GaugeStorage<std:
             // create global data space
             std::vector<hsize_t> dims; //  = { Nd, Lt, Lz, Ly, Lx, Nc, Nc * 2};
             dims.push_back(Nd);
-            for (int i = 0; i < num_dims; ++i) {
-                dims.push_back(lattice_total_dims[i]);
+            for (int i = 0; i < num_dims; ++i) { // 注意反向
+                dims.push_back(lattice_total_dims[gauge_dims - i - 1]);
             }
             dims.push_back(Nc);
             dims.push_back(Nc);
@@ -82,8 +82,8 @@ void GaugeWriter<Real_>::write(std::string file_path, qcu::io::GaugeStorage<std:
             // set local data space
             std::vector<hsize_t> local_dims;
             local_dims.push_back(Nd);
-            for (int i = 0; i < num_dims; ++i) {
-                local_dims.push_back(lattice_local_dims[i]);
+            for (int i = 0; i < num_dims; ++i) { // lattice_desc顺序为xyzt，序列化为tzyx
+                local_dims.push_back(lattice_local_dims[gauge_dims - i - 1]);
             }
             local_dims.push_back(Nc);
             local_dims.push_back(Nc);
@@ -91,7 +91,7 @@ void GaugeWriter<Real_>::write(std::string file_path, qcu::io::GaugeStorage<std:
             std::vector<hsize_t> offset;
             offset.push_back(0);
             for (int i = 0; i < num_dims; ++i) {
-                offset.push_back(data_offset[i]);
+                offset.push_back(data_offset[gauge_dims - i - 1]);
             }
             offset.push_back(0);
             offset.push_back(0);

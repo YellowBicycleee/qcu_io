@@ -17,11 +17,11 @@ void GaugeReader<Real_>::read(std::string file_path, qcu::io::GaugeStorage<std::
         assert(mpi_desc_[i] > 0);
     }
 
-    // debug信息：打印格子维度
-    for (int i = 0; i < gauge_dims; ++i) {
-        printf("%d ", gauge_in.get_global_lattice_desc()[i]);
-    }
-    printf("\n");
+    // // debug信息：打印格子维度
+    // for (int i = 0; i < gauge_dims; ++i) {
+    //     printf("%d ", gauge_in.get_global_lattice_desc()[i]);
+    // }
+    // printf("\n");
     
     
     try {
@@ -46,13 +46,13 @@ void GaugeReader<Real_>::read(std::string file_path, qcu::io::GaugeStorage<std::
             lattice_local_dims[i] = lattice_total_dims[i] / mpi_desc_[i];
         }
 
-        // debug信息：打印格子维度
-        if (mpi_rank_ == 0) {
-            for (int i = 0; i < gauge_dims; ++i) {
-                printf("%d ", lattice_local_dims[i]);
-            }
-            printf("\n");
-        }
+        // // debug信息：打印格子维度
+        // if (mpi_rank_ == 0) {
+        //     for (int i = 0; i < gauge_dims; ++i) {
+        //         printf("%d ", lattice_local_dims[i]);
+        //     }
+        //     printf("\n");
+        // }
 
         const std::string dataset_name = "LatticeMatrix";
 
