@@ -20,10 +20,14 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     try {
-        constexpr int Lx_required = 4;
-        constexpr int Ly_required = 4;
-        constexpr int Lz_required = 4;
-        constexpr int Lt_required = 4;
+        // constexpr int Lx_required = 4;
+        // constexpr int Ly_required = 4;
+        // constexpr int Lz_required = 4;
+        // constexpr int Lt_required = 4;
+        constexpr int Lx_required = 2;
+        constexpr int Ly_required = 2;
+        constexpr int Lz_required = 2;
+        constexpr int Lt_required = 2;
         constexpr int Nc_required = 3;
 
         std::vector<int> global_lattice_desc = {Lx_required, Ly_required, Lz_required, Lt_required};
@@ -87,8 +91,8 @@ int main(int argc, char* argv[]) {
                 std::cout << "\n进程 " << rank << " 的两个 Nc * Nc 矩阵:\n";
                 // 固定其他维度,输出两个color矩阵
                 const int t = 0, z = 0, y = 0, x = 0;
-                const int vol = Lx * Ly * Lz * Lt;
-                int one_dim_index = ((t * Lz + z) * Ly + y) * Lx + x;
+                const int vol = local_lx * local_ly * local_lz * local_lt;
+                int one_dim_index = ((t * local_lz + z) * local_ly + y) * local_lx + x;
                 std::cout << "one_dim_index = " << one_dim_index << std::endl;
                 std::complex<double> *data_ptr = gauge.data_ptr();
                 // 输出前两个维度
@@ -109,7 +113,7 @@ int main(int argc, char* argv[]) {
                     int z = local_lz - 1;
                     int y = local_ly - 1;
                     int x = local_lx - 1;
-                    int one_dim_index = ((t * Lz + z) * Ly + y) * Lx + x;
+                    int one_dim_index = ((t * local_lz + z) * local_ly + y) * local_lx + x;
 
                     std::cout << "last matrix " << ":\n";
                     for (size_t c1 = 0; c1 < Nc; ++c1) {
