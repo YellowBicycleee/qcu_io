@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cstdio>
 #define CHECK_MPI(cmd)                                                   \
     do {                                                                 \
         int err = cmd;                                                   \
