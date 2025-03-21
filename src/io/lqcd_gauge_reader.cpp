@@ -91,6 +91,15 @@ void GaugeReader<Real_>::read(std::string file_path, qcu::io::GaugeStorage<std::
         // 打开LatticeColorMatrix组
         H5::Group mainGroup = file.openGroup("LatticeColorMatrix");
         
+        // 检查方向数与数据集数是否匹配
+        hsize_t num_objs = 0;
+        H5Gget_num_objs(mainGroup.getId(), &num_objs);
+        if (num_objs != Nd) {
+            std::ostringstream error_msg;
+            error_msg << "Number of datasets (" << num_objs << ") does not match expected number of directions (" << Nd << ")";
+            throw std::runtime_error(error_msg.str());
+        }
+        
         // 设置集体读取属性
         H5::DSetMemXferPropList xfer_plist;
         xfer_plist.copy(H5::DSetMemXferPropList::DEFAULT);

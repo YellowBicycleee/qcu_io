@@ -9,6 +9,7 @@
 #include <vector>
 #include <complex>
 #include <numeric>
+#include <sstream>
 
 namespace qcu::io {
 // 方向标签定义
@@ -146,22 +147,25 @@ void GaugeWriter<Real_>::write(std::string file_path, qcu::io::GaugeStorage<std:
         
         // 添加附加信息到主组
         {
-            // 添加维度信息
-            std::vector<int> dims_info(num_dims);
-            for (int i = 0; i < num_dims; ++i) {
-                dims_info[i] = lattice_total_dims[i];
-            }
-            
-            hsize_t attr_dims[1] = {static_cast<hsize_t>(num_dims)};
-            H5::DataSpace attr_space(1, attr_dims);
-            H5::Attribute attr = mainGroup.createAttribute("lattice_dims", H5::PredType::NATIVE_INT, attr_space);
-            attr.write(H5::PredType::NATIVE_INT, dims_info.data());
-            
-            // 添加颜色数信息
-            H5::DataSpace nc_attr_space(H5S_SCALAR);
-            H5::Attribute nc_attr = mainGroup.createAttribute("n_colors", H5::PredType::NATIVE_INT, nc_attr_space);
+            // 添加Color属性（整数）
+            H5::DataSpace color_attr_space(H5S_SCALAR);
+            H5::Attribute color_attr = mainGroup.createAttribute("Color", H5::PredType::NATIVE_INT, color_attr_space);
             int nc_val = static_cast<int>(Nc);
-            nc_attr.write(H5::PredType::NATIVE_INT, &nc_val);
+            color_attr.write(H5::PredType::NATIVE_INT, &nc_val);
+            
+            // 添加Lattice属性（字符串格式："16 16 16 16"）
+            std::ostringstream lattice_str;
+            for (int i = 0; i < num_dims; ++i) {
+                if (i > 0) lattice_str << " ";
+                lattice_str << lattice_total_dims[i];
+            }
+            std::string lattice_value = lattice_str.str();
+            
+            // 创建字符串数据类型
+            H5::StrType str_type(H5::PredType::C_S1, lattice_value.size() + 1); // +1 for null terminator
+            H5::DataSpace lattice_attr_space(H5S_SCALAR);
+            H5::Attribute lattice_attr = mainGroup.createAttribute("Lattice", str_type, lattice_attr_space);
+            lattice_attr.write(str_type, lattice_value);
         }
         
     } catch (const H5::Exception& e) {
