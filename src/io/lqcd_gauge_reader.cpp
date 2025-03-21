@@ -144,23 +144,23 @@ void GaugeReader<Real_>::read(std::string file_path, qcu::io::GaugeStorage<std::
             offset.push_back(0);
             offset.push_back(0);
 
-            // 打印 offset
-            if (mpi_rank_ == 0) {
-                std::cout << "offset = ";
-                for (int i = 0; i < offset.size(); ++i) {
-                    std::cout << offset[i] << " ";
-                }
-                std::cout << std::endl;
-            }
-            MPI_Barrier(MPI_COMM_WORLD);
-            // 打印 offset
-            if (mpi_rank_ == 1) {
-                std::cout << "offset = ";
-                for (int i = 0; i < offset.size(); ++i) {
-                    std::cout << offset[i] << " ";
-                }
-                std::cout << std::endl;
-            }
+            // // 打印 offset
+            // if (mpi_rank_ == 0) {
+            //     std::cout << "offset = ";
+            //     for (int i = 0; i < offset.size(); ++i) {
+            //         std::cout << offset[i] << " ";
+            //     }
+            //     std::cout << std::endl;
+            // }
+            // MPI_Barrier(MPI_COMM_WORLD);
+            // // 打印 offset
+            // if (mpi_rank_ == 1) {
+            //     std::cout << "offset = ";
+            //     for (int i = 0; i < offset.size(); ++i) {
+            //         std::cout << offset[i] << " ";
+            //     }
+            //     std::cout << std::endl;
+            // }
 
             H5::DataSpace memspace(local_dims.size(), local_dims.data());
             dataspace.selectHyperslab(H5S_SELECT_SET, local_dims.data(), offset.data());
