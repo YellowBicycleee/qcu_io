@@ -147,11 +147,12 @@ void GaugeWriter<Real_>::write(std::string file_path, qcu::io::GaugeStorage<std:
         
         // 添加附加信息到主组
         {
-            // 添加Color属性（整数）
+            // 添加Color属性（改为字符串格式）
+            std::string color_value = std::to_string(static_cast<int>(Nc));
+            H5::StrType color_type(H5::PredType::C_S1, color_value.size() + 1); // +1 为空终止符
             H5::DataSpace color_attr_space(H5S_SCALAR);
-            H5::Attribute color_attr = mainGroup.createAttribute("Color", H5::PredType::NATIVE_INT, color_attr_space);
-            int nc_val = static_cast<int>(Nc);
-            color_attr.write(H5::PredType::NATIVE_INT, &nc_val);
+            H5::Attribute color_attr = mainGroup.createAttribute("Color", color_type, color_attr_space);
+            color_attr.write(color_type, color_value);
             
             // 添加Lattice属性（字符串格式："16 16 16 16"）
             std::ostringstream lattice_str;
