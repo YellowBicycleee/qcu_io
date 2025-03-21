@@ -5,8 +5,11 @@
 #include <cassert>
 #include <exception>
 #include <iomanip>
+#include <numeric>
 
 namespace qcu::io {
+// 方向标签定义
+const char high_dim_tag[] = {'X', 'Y', 'Z', 'T'};
 
 template <typename Real_>    
 void GaugeReader<Real_>::read(std::string file_path, qcu::io::GaugeStorage<std::complex<Real_>>& gauge_in) {
@@ -16,163 +19,132 @@ void GaugeReader<Real_>::read(std::string file_path, qcu::io::GaugeStorage<std::
     for (int i = 0; i < gauge_dims; ++i) {
         assert(mpi_desc_[i] > 0);
     }
-
-    // // debug信息：打印格子维度
-    // for (int i = 0; i < gauge_dims; ++i) {
-    //     printf("%d ", gauge_in.get_global_lattice_desc()[i]);
-    // }
-    // printf("\n");
     
+    // 计算MPI进程坐标
+    std::vector<int> mpi_coord(gauge_dims, 0); 
+    int remainder = mpi_rank_;
+    for (int i = gauge_dims - 1; i >= 0; --i) {
+        mpi_coord[i] = remainder % mpi_desc_[i];
+        remainder = remainder / mpi_desc_[i];
+    }
+
+    // 计算格点大小
+    std::vector<int> lattice_total_dims = gauge_in.get_global_lattice_desc();
+    std::vector<int> lattice_local_dims(gauge_dims, 0);
+    for (int i = 0; i < gauge_dims; ++i) {
+        lattice_local_dims[i] = lattice_total_dims[i] / mpi_desc_[i];
+    }
+
+    // 计算每个进程的 时空维度的数据偏移 （其他维度都是0，不需要计算）
+    std::vector<int> data_offset(gauge_dims, 0);
+    for (int i = 0; i < gauge_dims; ++i) {
+        data_offset[i] = mpi_coord[i] * lattice_local_dims[i];
+    }
+
+    const size_t Nd = gauge_dims;
+    const size_t Nc = gauge_in.get_n_color();
+
+    // 计算本地格点体积
+    size_t local_volume = 1;
+    for (int i = 0; i < gauge_dims; ++i) {
+        local_volume *= lattice_local_dims[i];
+    }
+    
+    // 预先计算HDF5相关的数据结构
+    // 1. 创建本地数据空间维度
+    std::vector<hsize_t> local_dims;
+    for (int i = 0; i < gauge_dims; ++i) {
+        local_dims.push_back(lattice_local_dims[gauge_dims - i - 1]);
+    }
+    local_dims.push_back(Nc);
+    local_dims.push_back(Nc);
+    
+    // 2. 创建偏移量
+    std::vector<hsize_t> offset;
+    for (int i = 0; i < gauge_dims; ++i) {
+        offset.push_back(data_offset[gauge_dims - i - 1]);
+    }
+    offset.push_back(0); // Nc
+    offset.push_back(0); // Nc
     
     try {
-        hid_t complex_id = H5Tcreate (H5T_COMPOUND, 2 * sizeof(Real_));
+        // 创建复数数据类型
+        hid_t complex_id = H5Tcreate(H5T_COMPOUND, 2 * sizeof(Real_));
         if constexpr (std::is_same_v<Real_, double>) {  
-            H5Tinsert (complex_id, "r", 0, H5T_NATIVE_DOUBLE);
-            H5Tinsert (complex_id, "i", sizeof(Real_), H5T_NATIVE_DOUBLE);
+            H5Tinsert(complex_id, "r", 0, H5T_NATIVE_DOUBLE);
+            H5Tinsert(complex_id, "i", sizeof(Real_), H5T_NATIVE_DOUBLE);
         } else if constexpr (std::is_same_v<Real_, float>) {
-            H5Tinsert (complex_id, "r", 0, H5T_NATIVE_FLOAT);
-            H5Tinsert (complex_id, "i", sizeof(Real_), H5T_NATIVE_FLOAT);
+            H5Tinsert(complex_id, "r", 0, H5T_NATIVE_FLOAT);
+            H5Tinsert(complex_id, "i", sizeof(Real_), H5T_NATIVE_FLOAT);
         } else {
             throw std::runtime_error("Unsupported data type, Only double and float are supported");
         }
+        
+        // 设置并行访问属性
+        H5::FileAccPropList plist;
+        plist.copy(H5::FileAccPropList::DEFAULT);
+        H5Pset_fapl_mpio(plist.getId(), MPI_COMM_WORLD, MPI_INFO_NULL);
 
-        const size_t Nd = gauge_dims;
-        const size_t Nc = gauge_in.get_n_color();
-
-        // const int Nc_double = dims[6];
-        std::vector<int> lattice_total_dims = gauge_in.get_global_lattice_desc();
-        std::vector<int> lattice_local_dims(gauge_dims, 0);
-        for (int i = 0; i < gauge_dims; ++i) {
-            lattice_local_dims[i] = lattice_total_dims[i] / mpi_desc_[i];
-        }
-
-        // // debug信息：打印格子维度
-        // if (mpi_rank_ == 0) {
-        //     for (int i = 0; i < gauge_dims; ++i) {
-        //         printf("%d ", lattice_local_dims[i]);
-        //     }
-        //     printf("\n");
-        // }
-
-        const std::string dataset_name = "LatticeMatrix";
-
-        // qcu::FourDimCoordinate mpi_coord;
-        std::vector<int> mpi_coord(gauge_dims, 0); // mpi坐标
-        int remainder = mpi_rank_;
-        for (int i = gauge_dims - 1; i >= 0; --i) {
-            mpi_coord[i] = remainder % mpi_desc_[i];
-            remainder = remainder / mpi_desc_[i];
-        }
-
-        std::vector<int> data_offset(gauge_dims, 0);
-        for (int i = 0; i < gauge_dims; ++i) {
-            data_offset[i] = mpi_coord[i] * lattice_local_dims[i];
-        }
-
-        // parallel write file  
-        {
-            // set parallel access property
-            H5::FileAccPropList plist;
-            plist.copy(H5::FileAccPropList::DEFAULT);
-            H5Pset_fapl_mpio(plist.getId(), MPI_COMM_WORLD, MPI_INFO_NULL);
-
-            // open HDF5 file
-            H5::H5File file(file_path, H5F_ACC_RDONLY, H5::FileCreatPropList::DEFAULT, plist);
-            H5::DataSet dataset = file.openDataSet(dataset_name);
-
-            // get data space and dimension information
+        // 打开HDF5文件
+        H5::H5File file(file_path, H5F_ACC_RDONLY, H5::FileCreatPropList::DEFAULT, plist);
+        
+        // 打开LatticeColorMatrix组
+        H5::Group mainGroup = file.openGroup("LatticeColorMatrix");
+        
+        // 设置集体读取属性
+        H5::DSetMemXferPropList xfer_plist;
+        xfer_plist.copy(H5::DSetMemXferPropList::DEFAULT);
+        H5Pset_dxpl_mpio(xfer_plist.getId(), H5FD_MPIO_COLLECTIVE);
+        
+        // 预先创建内存空间，对所有方向都是相同的
+        H5::DataSpace memspace(local_dims.size(), local_dims.data());
+        
+        // 对每个方向读取数据
+        for (int dir = 0; dir < Nd; ++dir) {
+            // 确定方向名称
+            std::string dir_name;
+            if (dir < 4) {
+                dir_name = std::string(1, high_dim_tag[dir]);
+            } else {
+                dir_name = std::to_string(dir);
+            }
+            
+            // 打开对应方向的数据集
+            H5::DataSet dataset = mainGroup.openDataSet(dir_name);
+            
+            // 获取文件中的数据空间和维度信息
             H5::DataSpace dataspace = dataset.getSpace();
             const int ndims = dataspace.getSimpleExtentNdims();
-            assert(ndims == gauge_dims + 3);// ndims: [Ndim] [L....L] [Nc] [Nc]
-            std::vector<hsize_t> dims(ndims); 
+            
+            // 检查维度 - 应该是 [L....L] [Nc] [Nc]
+            assert(ndims == gauge_dims + 2); 
+            
+            std::vector<hsize_t> dims(ndims);
             dataspace.getSimpleExtentDims(dims.data(), nullptr);
             
-            int file_lattice_ndim = dims[0];
-            if (file_lattice_ndim != gauge_dims) {
-                std::ostringstream error_msg;
-                error_msg << "." << std::string(32, '-') << ".\n";
-                error_msg << "|" << std::setw(6) << "" 
-                    << " | "
-                    << std::setw(10) << std::left << "IN_FILE"
-                    << " | "
-                    << std::setw(10) << std::left << "REQUIRED"
-                    << "|\n";
-                throw std::runtime_error("Dimension mismatch \n" + error_msg.str());
-            }
-            int i = 0;
-            std::string tags[] = {"Nd", "Lt", "Lz", "Ly", "Lx", "Nc", "Nc"};
-            for (i = 0; i < gauge_dims; ++i) { // 确定四个维度也一样
-                if (dims[(gauge_dims - 1 - i) + 1] != lattice_total_dims[i]) {
+            // 验证维度匹配
+            for (int i = 0; i < gauge_dims; ++i) {
+                if (dims[i] != lattice_total_dims[gauge_dims - i - 1]) {
                     std::ostringstream error_msg;
-                    error_msg << "." << std::string(32, '-') << ".\n";
-                    error_msg << "|" << std::setw(6) << "" 
-                        << " | "
-                        << std::setw(10) << std::left << "IN_FILE"
-                        << " | "
-                        << std::setw(10) << std::left << "REQUIRED"
-                        << "|\n";
-                    error_msg << "|" << std::string(32, '-') << "|\n";
-                    std::cout << "dims.size() = " << dims.size() << std::endl;
-                    std::cout << "lattice_total_dims.size() = " << lattice_total_dims.size() << std::endl;
-                    for (int j = 0; j < gauge_dims; ++j) {
-                        error_msg << "|" << std::setw(6) << std::left << tags[j+1]
-                            << " | "
-                            << std::setw(10) << std::left << dims[j + 1]
-                            << " | "
-                            << std::setw(10)  << std::left << lattice_total_dims[j] << "|\n";
-                    }
-                    error_msg << "." << std::string(32, '-') << ".\n";
-                    throw std::runtime_error("Dimension mismatch \n" + error_msg.str());
+                    error_msg << "Dimension mismatch for direction " << dir_name;
+                    throw std::runtime_error(error_msg.str());
                 }
             }
-
-            const size_t Nc = dims[dims.size() - 1];
-            // set local data space
-            std::vector<hsize_t> local_dims;
-            local_dims.push_back(Nd);
-            for (int i = 0; i < gauge_dims; ++i) {
-                local_dims.push_back(lattice_local_dims[gauge_dims - i - 1]);
-            }
-            local_dims.push_back(Nc);
-            local_dims.push_back(Nc);
-            std::vector<hsize_t> offset;
-            // dims 序列化时反向
-            offset.push_back(0);
-            for (int i = 0; i < gauge_dims; ++i) {
-                offset.push_back(data_offset[gauge_dims -i - 1]); // Lt, Lz, Ly, Lx
-            }
-            offset.push_back(0);
-            offset.push_back(0);
-
-            // // 打印 offset
-            // if (mpi_rank_ == 0) {
-            //     std::cout << "offset = ";
-            //     for (int i = 0; i < offset.size(); ++i) {
-            //         std::cout << offset[i] << " ";
-            //     }
-            //     std::cout << std::endl;
-            // }
-            // MPI_Barrier(MPI_COMM_WORLD);
-            // // 打印 offset
-            // if (mpi_rank_ == 1) {
-            //     std::cout << "offset = ";
-            //     for (int i = 0; i < offset.size(); ++i) {
-            //         std::cout << offset[i] << " ";
-            //     }
-            //     std::cout << std::endl;
-            // }
-
-            H5::DataSpace memspace(local_dims.size(), local_dims.data());
+            
+            // 设置超块选择
             dataspace.selectHyperslab(H5S_SELECT_SET, local_dims.data(), offset.data());
-
-            // set collective read property
-            H5::DSetMemXferPropList xfer_plist;
-            xfer_plist.copy(H5::DSetMemXferPropList::DEFAULT);
-            H5Pset_dxpl_mpio(xfer_plist.getId(), H5FD_MPIO_COLLECTIVE);
-
-            // read data
-            dataset.read(reinterpret_cast<Real_*>(gauge_in.data_ptr()), complex_id, memspace, dataspace, xfer_plist);
-
+            
+            // 计算当前方向数据在内存中的偏移量
+            size_t dir_offset = dir * local_volume * Nc * Nc;
+            
+            // 读取数据到指定偏移位置
+            dataset.read(
+                reinterpret_cast<Real_*>(gauge_in.data_ptr()) + dir_offset * 2, // *2因为复数占用2个Real_
+                complex_id,
+                memspace,
+                dataspace,
+                xfer_plist
+            );
         }
     } catch (const H5::Exception& e) {
         if (mpi_rank_ == 0) {
@@ -189,7 +161,6 @@ void GaugeReader<Real_>::read(std::string file_path, qcu::io::GaugeStorage<std::
         MPI_Finalize();
         exit(-1);
     }
-
 }
 
 template class GaugeReader<double>;
